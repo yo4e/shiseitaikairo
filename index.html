@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>詩生態回路 - M2プロトタイプ</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="page-header">
+        <h1>詩生態回路</h1>
+        <p class="tagline">
+          M2プロトタイプ：世代進化とシード再現に対応
+        </p>
+      </header>
+
+      <div class="layout-columns">
+        <div class="layout-column layout-column-left">
+          <section
+            class="panel controls-panel layout-controls"
+            aria-labelledby="controls-title"
+          >
+            <h2 id="controls-title">設定</h2>
+            <form id="controls-form" novalidate>
+              <div class="grid">
+                <label for="nutrient-preset">栄養語プリセット</label>
+                <select id="nutrient-preset" name="nutrientPreset">
+                  <option value="">カスタム</option>
+                  <option value="garden">庭園</option>
+                  <option value="work">仕事</option>
+                  <option value="cosmic">宇宙</option>
+                  <option value="body">身体</option>
+                  <option value="harbor">港湾</option>
+                  <option value="ritual">儀式</option>
+                </select>
+
+                <label for="nutrients">栄養語（カンマ区切り）</label>
+                <textarea
+                  id="nutrients"
+                  name="nutrients"
+                  rows="3"
+                  placeholder="ルッコラ, フェンネル, 瓶, 水, 風"
+                ></textarea>
+
+                <label for="toxic-words">毒語（任意）</label>
+                <input
+                  id="toxic-words"
+                  name="toxicWords"
+                  type="text"
+                  placeholder="許諾不明, 注意"
+                />
+
+                <label for="population">個体数</label>
+                <input
+                  id="population"
+                  name="population"
+                  type="number"
+                  min="1"
+                  max="300"
+                  value="30"
+                />
+
+                <label for="generation-count">世代数</label>
+                <input
+                  id="generation-count"
+                  name="generationCount"
+                  type="number"
+                  min="1"
+                  max="20"
+                  value="3"
+                />
+
+                <label for="seed">シード（任意）</label>
+                <input
+                  id="seed"
+                  name="seed"
+                  type="number"
+                  placeholder="未入力なら自動生成"
+                />
+
+                <label for="elite-ratio">エリート比率</label>
+                <input
+                  id="elite-ratio"
+                  name="eliteRatio"
+                  type="number"
+                  min="0"
+                  max="1"
+                  step="0.01"
+                  value="0.2"
+                />
+
+                <label for="diversity-ratio">多様性比率</label>
+                <input
+                  id="diversity-ratio"
+                  name="diversityRatio"
+                  type="number"
+                  min="0"
+                  max="1"
+                  step="0.01"
+                  value="0.07"
+                />
+
+                <label for="mutation-rate">突然変異率</label>
+                <input
+                  id="mutation-rate"
+                  name="mutationRate"
+                  type="number"
+                  min="0"
+                  max="1"
+                  step="0.01"
+                  value="0.12"
+                />
+
+                <label for="mutation-strength">突然変異強度</label>
+                <input
+                  id="mutation-strength"
+                  name="mutationStrength"
+                  type="number"
+                  min="0"
+                  max="1"
+                  step="0.01"
+                  value="0.18"
+                />
+
+                <label for="particle-rate">助詞挿入率</label>
+                <input
+                  id="particle-rate"
+                  name="particleRate"
+                  type="number"
+                  min="0"
+                  max="1"
+                  step="0.01"
+                  value="0.10"
+                />
+
+                <label for="conjunction-rate">接続詞挿入率</label>
+                <input
+                  id="conjunction-rate"
+                  name="conjunctionRate"
+                  type="number"
+                  min="0"
+                  max="1"
+                  step="0.01"
+                  value="0.03"
+                />
+              </div>
+
+              <p id="controls-error" class="error-text" aria-live="polite"></p>
+              <p id="interaction-status" class="item-meta" aria-live="polite">
+                操作ログ: 待機中
+              </p>
+
+              <div class="actions">
+                <button id="run-button" type="submit">実行</button>
+                <button id="reset-button" type="button">リセット</button>
+              </div>
+            </form>
+          </section>
+
+          <section
+            class="panel speciation-panel layout-speciation"
+            aria-labelledby="speciation-title"
+          >
+            <h2 id="speciation-title">種分化ビュー</h2>
+            <div id="speciation-wrap" class="plot-wrap">
+              <svg
+                id="speciation-plot"
+                class="speciation-plot"
+                viewBox="0 0 640 320"
+                role="img"
+                aria-label="断定-余韻と具体度の散布図"
+              ></svg>
+            </div>
+            <p id="speciation-detail" class="item-meta">
+              点をクリックすると個体情報を表示します。
+            </p>
+          </section>
+
+          <section
+            class="panel specimen-panel layout-specimen"
+            aria-labelledby="specimen-title"
+          >
+            <h2 id="specimen-title">標本箱</h2>
+            <div id="specimen-list" class="stack"></div>
+          </section>
+        </div>
+
+        <div class="layout-column layout-column-right">
+          <section
+            class="panel winners-panel layout-winners"
+            aria-labelledby="winners-title"
+          >
+            <h2 id="winners-title">現在世代</h2>
+            <div id="generation-tabs" class="generation-tabs"></div>
+            <div id="winners-list" class="stack"></div>
+            <div id="winner-detail" class="detail-panel">
+              <p class="empty-state">
+                勝者を選ぶと遺伝子と診断詳細を表示します。
+              </p>
+            </div>
+          </section>
+
+          <section
+            class="panel history-panel layout-history"
+            aria-labelledby="history-title"
+          >
+            <div class="panel-head">
+              <h2 id="history-title">実行履歴</h2>
+              <div class="head-actions">
+                <button id="reload-history-button" type="button">再読込</button>
+                <button id="clear-history-button" type="button">
+                  履歴全削除
+                </button>
+              </div>
+            </div>
+            <p id="active-run-meta" class="item-meta">現在表示中: なし</p>
+            <div id="history-list" class="stack"></div>
+          </section>
+        </div>
+      </div>
+    </main>
+
+    <script>
+      window.__SHISEI_APP_LOADED__ = false;
+      window.setTimeout(() => {
+        if (window.__SHISEI_APP_LOADED__) {
+          return;
+        }
+        const errorEl = document.getElementById("controls-error");
+        if (!errorEl) {
+          return;
+        }
+        if (window.location.protocol === "file:") {
+          errorEl.textContent =
+            "このページは file:// 直開きだと動きません。ローカルサーバーで開いてください（例: python3 -m http.server 5173）。";
+        } else {
+          errorEl.textContent =
+            "アプリのスクリプト読込に失敗しました。ブラウザのコンソールを確認してください。";
+        }
+      }, 1200);
+    </script>
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>
