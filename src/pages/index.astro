@@ -1,0 +1,69 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+---
+
+<BaseLayout
+  title="トップ"
+  description="詩生態回路の公式サイト。詩の人工生命シミュレータ、使い方、ポリシーをまとめています。"
+>
+  <section class="hero">
+    <h1>言葉を資源にして、生存競争する詩の群れ</h1>
+    <p>
+      詩生態回路は、詩の個体群が生成・淘汰・進化していく人工生命シミュレータです。<br />
+      季節環境、資源枯渇、エネルギー収支などの要素で、生態系としての挙動を観察できます。
+    </p>
+    <div class="hero-actions">
+      <a class="button primary" href="/app/index.html">シミュレータを開く</a>
+      <a class="button secondary" href="/cabinet">公共標本箱を見る</a>
+      <a class="button secondary" href="/how-to">使い方を見る</a>
+    </div>
+  </section>
+
+  <section class="page-grid" aria-label="コンテンツ案内">
+    <article class="card">
+      <h2>詩方面の特徴</h2>
+      <ul>
+        <li>遺伝子にもとづく詩生成（行数、具体度、断定度、余韻度など）</li>
+        <li>助詞・接続詞の可変挿入</li>
+        <li>末尾語尾の断定系 / 余韻系バリエーション</li>
+      </ul>
+    </article>
+
+    <article class="card">
+      <h2>人工生命方面の特徴</h2>
+      <ul>
+        <li>選択・交叉・突然変異による世代進化</li>
+        <li>季節と資源循環による環境変動</li>
+        <li>可変個体数とエネルギー収支</li>
+      </ul>
+    </article>
+
+    <article class="card">
+      <h3>公共標本箱</h3>
+      <p>
+        一覧と標本詳細を公開中です。API接続時は実データ、未接続時はモック表示で動作します。
+      </p>
+      <a class="button secondary" href="/cabinet">公共標本箱へ</a>
+    </article>
+
+    <article class="card">
+      <h3>使い方</h3>
+      <p>
+        基本操作、各パラメータの意味、観察ポイントをまとめています。
+      </p>
+      <a class="button secondary" href="/how-to">How To ページへ</a>
+    </article>
+
+    <article class="card">
+      <h3>ポリシー</h3>
+      <p>
+        データの扱い、今後予定している公共標本箱の投稿方針などの土台を記載しています。
+      </p>
+      <a class="button secondary" href="/privacy-policy">プライバシーポリシーへ</a>
+    </article>
+  </section>
+
+  <p class="notice">
+    既存シミュレータ本体は <a href="/app/index.html">/app/index.html</a> で稼働します。
+  </p>
+</BaseLayout>

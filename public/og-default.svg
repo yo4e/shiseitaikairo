@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-labelledby="title desc">
+  <title id="title">詩生態回路</title>
+  <desc id="desc">詩の個体群が生成・淘汰・進化する人工生命シミュレータ</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#efe4cf" />
+      <stop offset="55%" stop-color="#f4f3ea" />
+      <stop offset="100%" stop-color="#d7e7df" />
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)" />
+  <g fill="#1f2328" font-family="Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif">
+    <text x="80" y="250" font-size="76" font-weight="700">詩生態回路</text>
+    <text x="80" y="330" font-size="38" fill="#2b4e48">言葉を資源にして、生存競争する詩の群れ</text>
+  </g>
+</svg>

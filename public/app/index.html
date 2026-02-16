@@ -7,7 +7,21 @@
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
-    <main class="app-shell">
+    <header class="site-header">
+      <div class="site-shell">
+        <a href="/" class="brand">詩生態回路</a>
+        <nav class="site-nav" aria-label="グローバルナビゲーション">
+          <a href="/cabinet">公共標本箱</a>
+          <a href="/how-to">使い方</a>
+          <a href="/privacy-policy">プライバシーポリシー</a>
+          <a href="/app/index.html">シミュレータ</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="site-main">
+      <div class="site-shell">
+        <div class="app-shell">
       <header class="page-header">
         <h1>詩生態回路</h1>
         <p class="tagline">
@@ -219,7 +233,17 @@
           </section>
         </div>
       </div>
+      </div>
     </main>
+
+    <footer class="site-footer">
+      <div class="site-shell footer-inner">
+        <p>© 2026 詩生態回路</p>
+        <p>
+          <a href="/privacy-policy">プライバシーポリシー</a>
+        </p>
+      </div>
+    </footer>
 
     <script>
       window.__SHISEI_APP_LOADED__ = false;

@@ -1,0 +1,44 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+---
+
+<BaseLayout
+  title="標本詳細"
+  description="公共標本箱の標本詳細ページ。詩本文・遺伝子情報・診断情報を表示します。"
+>
+  <article class="policy" id="specimen-root" data-api-base="/api">
+    <h1 id="specimen-title">標本詳細</h1>
+    <p id="specimen-meta" class="specimen-meta">読み込み中...</p>
+
+    <div class="chip-list" aria-label="標本ラベル" id="specimen-chips"></div>
+
+    <h2>詩本文</h2>
+    <pre class="poem-full" id="specimen-poem">読み込み中...</pre>
+
+    <h2>診断 / スコア内訳</h2>
+    <ul id="specimen-diagnosis"></ul>
+
+    <h2>遺伝子サマリ</h2>
+    <table class="kv-table">
+      <tbody id="specimen-genome-rows">
+        <tr><th>読み込み中</th><td>...</td></tr>
+      </tbody>
+    </table>
+
+    <h2>親ID</h2>
+    <p id="specimen-parents">読み込み中...</p>
+
+    <div class="hero-actions">
+      <button class="button secondary" id="specimen-like" type="button">いいね</button>
+      <button class="button secondary" id="specimen-report" type="button">通報</button>
+      <a class="button secondary" href="/cabinet">公共標本箱へ戻る</a>
+      <a class="button secondary" href="/app/index.html">シミュレータを開く</a>
+    </div>
+
+    <p class="notice" id="specimen-status">標本を読み込んでいます。</p>
+  </article>
+
+  <script>
+    import "../../scripts/specimen-client.ts";
+  </script>
+</BaseLayout>
