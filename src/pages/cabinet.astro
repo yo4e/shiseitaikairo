@@ -1,0 +1,187 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import {
+  BIOME_LABELS,
+  PUBLIC_SPECIMENS,
+  SEASON_LABELS,
+  buildPoemPreview,
+  formatSpecimenDate,
+} from "../data/public-specimens";
+
+const newItems = [...PUBLIC_SPECIMENS].sort((left, right) =>
+  right.createdAt.localeCompare(left.createdAt),
+);
+const hotItems = [...PUBLIC_SPECIMENS].sort((left, right) => {
+  if (right.likes !== left.likes) {
+    return right.likes - left.likes;
+  }
+  return right.createdAt.localeCompare(left.createdAt);
+});
+
+const biomeCounts = Object.entries(BIOME_LABELS)
+  .map(([key, label]) => ({
+    key,
+    label,
+    count: PUBLIC_SPECIMENS.filter((item) => item.biome === key).length,
+  }))
+  .filter((entry) => entry.count > 0);
+
+const seasonCounts = Object.entries(SEASON_LABELS)
+  .map(([key, label]) => ({
+    key,
+    label,
+    count: PUBLIC_SPECIMENS.filter((item) => item.season === key).length,
+  }))
+  .filter((entry) => entry.count > 0);
+
+const biomeFilterOptions = Object.entries(BIOME_LABELS).map(([key, label]) => ({
+  key,
+  label,
+}));
+const seasonFilterOptions = Object.entries(SEASON_LABELS).map(([key, label]) => ({
+  key,
+  label,
+}));
+---
+
+<BaseLayout
+  title="公共標本箱"
+  description="詩生態回路の公共標本箱。新着・人気・バイオーム・季節ごとに標本を閲覧できます。"
+>
+  <section class="hero">
+    <h1>公共標本箱</h1>
+    <p>
+      生成された個体を投稿して共有するための土台ページです。<br />
+      APIが利用可能な環境では実データを表示し、未接続時はモック表示に切り替わります。
+    </p>
+    <div class="hero-actions">
+      <a class="button primary" href="/app/index.html">シミュレータで個体を作る</a>
+      <a class="button secondary" href="/how-to">使い方を見る</a>
+    </div>
+  </section>
+
+  <section class="card filter-card" aria-label="標本フィルター">
+    <h2>表示フィルター</h2>
+    <div class="filter-grid">
+      <div class="filter-field">
+        <label for="filter-biome">バイオーム</label>
+        <select id="filter-biome">
+          <option value="">すべて</option>
+          {
+            biomeFilterOptions.map((option) => (
+              <option value={option.key}>{option.label}</option>
+            ))
+          }
+        </select>
+      </div>
+
+      <div class="filter-field">
+        <label for="filter-season">季節</label>
+        <select id="filter-season">
+          <option value="">すべて</option>
+          {
+            seasonFilterOptions.map((option) => (
+              <option value={option.key}>{option.label}</option>
+            ))
+          }
+        </select>
+      </div>
+    </div>
+    <div class="hero-actions">
+      <button class="button secondary" id="apply-filters" type="button">絞り込む</button>
+      <button class="button secondary" id="clear-filters" type="button">クリア</button>
+    </div>
+    <div class="view-toggle" role="group" aria-label="表示モード">
+      <span class="view-toggle-label">表示モード</span>
+      <div class="view-toggle-buttons">
+        <button class="button secondary view-toggle-button" id="view-both" data-view-mode="both" type="button">両方</button>
+        <button class="button secondary view-toggle-button" id="view-new" data-view-mode="new" type="button">新着のみ</button>
+        <button class="button secondary view-toggle-button" id="view-hot" data-view-mode="hot" type="button">人気のみ</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="cabinet-layout" aria-label="標本一覧" id="cabinet-root" data-api-base="/api">
+    <article class="cabinet-block" id="cabinet-block-new">
+      <h2>新着</h2>
+      <div class="specimen-grid" id="new-specimens">
+        {
+          newItems.map((item) => (
+            <article class="specimen-card">
+              <div class="specimen-head">
+                <strong>{item.specimenId}</strong>
+                <span>{formatSpecimenDate(item.createdAt)}</span>
+              </div>
+              <p class="poem-snippet">{buildPoemPreview(item.poem)}</p>
+              <p class="specimen-meta">
+                採取者: {item.collectorId} / スコア: {item.scoreTotal.toFixed(2)} / いいね: {item.likes}
+              </p>
+              <div class="chip-list">
+                <span class="chip">{BIOME_LABELS[item.biome]}</span>
+                <span class="chip">{SEASON_LABELS[item.season]}</span>
+              </div>
+              <div class="hero-actions">
+                <a class="button secondary" href={`/specimen/?id=${encodeURIComponent(item.specimenId)}`}>詳細</a>
+              </div>
+            </article>
+          ))
+        }
+      </div>
+    </article>
+
+    <article class="cabinet-block" id="cabinet-block-hot">
+      <h2>人気</h2>
+      <div class="specimen-grid" id="hot-specimens">
+        {
+          hotItems.map((item, index) => (
+            <article class="specimen-card">
+              <div class="specimen-head">
+                <strong>#{index + 1} {item.specimenId}</strong>
+                <span>いいね {item.likes}</span>
+              </div>
+              <p class="poem-snippet">{buildPoemPreview(item.poem, 2)}</p>
+              <p class="specimen-meta">
+                {BIOME_LABELS[item.biome]} / {SEASON_LABELS[item.season]} / {formatSpecimenDate(item.createdAt)}
+              </p>
+              <div class="hero-actions">
+                <a class="button secondary" href={`/specimen/?id=${encodeURIComponent(item.specimenId)}`}>詳細</a>
+              </div>
+            </article>
+          ))
+        }
+      </div>
+    </article>
+  </section>
+
+  <section class="page-grid" aria-label="集計情報">
+    <article class="card">
+      <h3>バイオーム内訳</h3>
+      <ul>
+        {
+          biomeCounts.map((entry) => (
+            <li>{entry.label}: {entry.count}件</li>
+          ))
+        }
+      </ul>
+    </article>
+
+    <article class="card">
+      <h3>季節内訳</h3>
+      <ul>
+        {
+          seasonCounts.map((entry) => (
+            <li>{entry.label}: {entry.count}件</li>
+          ))
+        }
+      </ul>
+    </article>
+  </section>
+
+  <p class="notice status-warn" id="cabinet-status">
+    公共標本箱の表示を初期化しました。
+  </p>
+
+  <script>
+    import "../scripts/cabinet-client.ts";
+  </script>
+</BaseLayout>

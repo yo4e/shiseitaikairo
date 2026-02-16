@@ -1,0 +1,68 @@
+---
+import "../styles/site.css";
+
+interface Props {
+  title: string;
+  description?: string;
+}
+
+const {
+  title,
+  description = "詩生態回路は、詩の個体群が生成・淘汰・進化する人工生命シミュレータです。",
+} = Astro.props;
+
+const pageTitle = `${title} | 詩生態回路`;
+const canonicalUrl = new URL(Astro.url.pathname, Astro.url).toString();
+const ogImage = new URL("/og-default.svg", Astro.url).toString();
+---
+
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{pageTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonicalUrl} />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="詩生態回路" />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonicalUrl} />
+    <meta property="og:image" content={ogImage} />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={pageTitle} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="site-shell">
+        <a href="/" class="brand">詩生態回路</a>
+        <nav class="site-nav" aria-label="グローバルナビゲーション">
+          <a href="/cabinet">公共標本箱</a>
+          <a href="/how-to">使い方</a>
+          <a href="/privacy-policy">プライバシーポリシー</a>
+          <a href="/app/index.html">シミュレータ</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="site-main">
+      <div class="site-shell">
+        <slot />
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div class="site-shell footer-inner">
+        <p>© {new Date().getFullYear()} 詩生態回路</p>
+        <p>
+          <a href="/privacy-policy">プライバシーポリシー</a>
+        </p>
+      </div>
+    </footer>
+  </body>
+</html>

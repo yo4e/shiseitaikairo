@@ -107,6 +107,10 @@ const TOXIC_WORD_POOL = [
 
 const DEFAULT_TOXIC_WORD_COUNT = 2;
 
+const API_BASE_CANDIDATES = ["/api", "http://127.0.0.1:8787/api", "http://localhost:8787/api"];
+const BIOME_KEYS = new Set(["garden", "work", "cosmic", "body", "harbor", "ritual"]);
+const SEASON_KEYS = new Set(["spring", "summer", "autumn", "winter"]);
+
 const GENOME_LABELS = {
   lines: "行数",
   lineLen: "目標字数",
@@ -138,6 +142,7 @@ const state = {
   activeGeneration: null,
   activeWinnerId: null,
   storageReady: false,
+  publishedSpecimens: {},
 };
 
 const refs = {
@@ -194,6 +199,8 @@ async function boot() {
   refs.resetButton.addEventListener("click", onReset);
   refs.generationTabs.addEventListener("click", onGenerationSelect);
   refs.speciationPlot.addEventListener("click", onSpeciationSelect);
+  refs.winnerDetail.addEventListener("click", onWinnerDetailAction);
+  refs.specimenList.addEventListener("click", onSpecimenAction);
   refs.reloadHistoryButton.addEventListener("click", onReloadHistory);
   refs.clearHistoryButton.addEventListener("click", onClearHistory);
 
@@ -442,6 +449,109 @@ function onSpeciationSelect(event) {
   renderRun(run);
 }
 
+function onWinnerDetailAction(event) {
+  const button = getClosestTarget(event, "button[data-action='publish-winner']");
+  if (!(button instanceof HTMLButtonElement)) {
+    return;
+  }
+
+  const generation = Number.parseInt(button.dataset.generation, 10);
+  const individualId = button.dataset.individualId || "";
+  void submitSpecimenFromActiveRun({
+    generation,
+    individualId,
+    triggerButton: button,
+    sourceLabel: "個体詳細",
+  });
+}
+
+function onSpecimenAction(event) {
+  const button = getClosestTarget(event, "button[data-action='publish-specimen']");
+  if (!(button instanceof HTMLButtonElement)) {
+    return;
+  }
+
+  const generation = Number.parseInt(button.dataset.generation, 10);
+  const individualId = button.dataset.individualId || "";
+  void submitSpecimenFromActiveRun({
+    generation,
+    individualId,
+    triggerButton: button,
+    sourceLabel: "標本箱",
+  });
+}
+
+async function submitSpecimenFromActiveRun({
+  generation,
+  individualId,
+  triggerButton,
+  sourceLabel,
+}) {
+  if (!Number.isFinite(generation) || generation < 1 || !individualId) {
+    setInteractionStatus(`投稿失敗: 個体指定が不正 (${sourceLabel})`);
+    return;
+  }
+
+  const run = getActiveRun();
+  if (!run) {
+    setInteractionStatus(`投稿失敗: active run がありません (${sourceLabel})`);
+    return;
+  }
+
+  const generationData = getGenerationData(run, generation);
+  if (!generationData) {
+    setInteractionStatus(`投稿失敗: 世代が見つかりません (${individualId}, g=${generation})`);
+    return;
+  }
+
+  const record = generationData.records.find(
+    (candidate) => candidate.individualId === individualId,
+  );
+  if (!record) {
+    setInteractionStatus(`投稿失敗: 個体が見つかりません (${individualId})`);
+    return;
+  }
+
+  const originalLabel = triggerButton.textContent || "公共標本箱へ投稿";
+  triggerButton.disabled = true;
+  triggerButton.textContent = "投稿中...";
+  clearError();
+  setInteractionStatus(`公共標本箱へ投稿中: ${individualId}`);
+
+  try {
+    const payload = buildPublicSpecimenPayload({
+      run,
+      generation,
+      record,
+    });
+    const result = await postSpecimen(payload);
+
+    setPostedSpecimen({
+      runId: run.runId,
+      generation,
+      individualId,
+      specimenId: result.specimenId,
+      detailUrl: result.detailUrl,
+    });
+
+    triggerButton.textContent = "投稿済み";
+    triggerButton.title = result.specimenId;
+    setInteractionStatus(`投稿完了: ${result.specimenId}`);
+    renderRun(run);
+  } catch (error) {
+    console.error(error);
+    triggerButton.textContent = originalLabel;
+    const message =
+      error instanceof Error
+        ? error.message
+        : "標本の投稿に失敗しました。APIサーバーを確認してください。";
+    setError(message);
+    setInteractionStatus(`投稿失敗: ${individualId}`);
+  } finally {
+    triggerButton.disabled = false;
+  }
+}
+
 function onHistorySelect(event) {
   const button =
     event.currentTarget instanceof HTMLButtonElement
@@ -508,6 +618,7 @@ async function onDeleteRun(runId) {
     }
   }
 
+  prunePublishedByRunId(runId);
   state.runs = state.runs.filter((item) => item.runId !== runId);
 
   if (state.activeRunId === runId) {
@@ -570,6 +681,7 @@ async function onClearHistory() {
   state.activeRunId = null;
   state.activeGeneration = null;
   state.activeWinnerId = null;
+  state.publishedSpecimens = {};
 
   setInteractionStatus("履歴全削除完了");
   renderEmptyState();
@@ -634,7 +746,7 @@ function renderRun(run) {
   renderGenerationTabs(run.generations, generationData.generation);
   renderWinners(generationData);
   renderSpeciation(generationData.records);
-  renderSpecimens(run.specimens);
+  renderSpecimens(run.specimens, run.runId);
 }
 
 function renderGenerationTabs(generations, activeGeneration) {
@@ -692,17 +804,42 @@ function renderWinners(generationData) {
   renderWinnerDetail(selectedRecord, generationData.generation, run);
 }
 
-function renderSpecimens(specimens) {
+function renderSpecimens(specimens, runId) {
   refs.specimenList.innerHTML = specimens
-    .map(
-      (specimen) => `
+    .map((specimen) => {
+      const posted = getPostedSpecimen(runId, specimen.individualId, specimen.generation);
+      const postedHtml = posted
+        ? `
+        <p class="item-meta published-note">
+          投稿済み: ${escapeHtml(posted.specimenId)}
+          <a class="inline-link" href="${escapeHtml(posted.detailUrl)}" target="_blank" rel="noopener noreferrer">標本詳細を開く</a>
+        </p>
+      `
+        : "";
+      const buttonLabel = posted ? "投稿済み" : "公共標本箱へ投稿";
+      const buttonClass = posted ? "tiny-button success" : "tiny-button";
+
+      return `
       <article class="item-card">
         <h3>${escapeHtml(specimen.title)}</h3>
         <p>${escapeHtml(specimen.poem)}</p>
         <p class="item-meta">個体ID: ${specimen.individualId}, スコア: ${specimen.score.toFixed(2)}</p>
+        ${postedHtml}
+        <div class="head-actions">
+          <button
+            class="${buttonClass}"
+            type="button"
+            data-action="publish-specimen"
+            data-generation="${specimen.generation}"
+            data-individual-id="${escapeHtml(specimen.individualId)}"
+            ${posted ? "disabled" : ""}
+          >
+            ${buttonLabel}
+          </button>
+        </div>
       </article>
-    `,
-    )
+    `;
+    })
     .join("");
 }
 
@@ -926,6 +1063,17 @@ function renderWinnerDetail(record, generation, run) {
   const environmentLine = environmentText
     ? `<p class="item-meta">環境: ${escapeHtml(environmentText)}</p>`
     : "";
+  const posted = getPostedSpecimen(run?.runId, record.individualId, generation);
+  const postedLine = posted
+    ? `
+      <p class="item-meta published-note">
+        投稿済み: ${escapeHtml(posted.specimenId)}
+        <a class="inline-link" href="${escapeHtml(posted.detailUrl)}" target="_blank" rel="noopener noreferrer">標本詳細を開く</a>
+      </p>
+    `
+    : "";
+  const publishLabel = posted ? "投稿済み" : "この個体を公共標本箱へ投稿";
+  const publishClass = posted ? "tiny-button success" : "tiny-button";
 
   refs.winnerDetail.innerHTML = `
     <h3>個体詳細: ${escapeHtml(record.individualId)}</h3>
@@ -933,6 +1081,19 @@ function renderWinnerDetail(record, generation, run) {
     <p class="item-meta">年齢: ${record.age ?? 0}, エネルギー: ${formatEnergy(record.energy?.before)} → ${formatSigned(record.energy?.delta ?? 0)} → ${formatEnergy(record.energy?.after)}</p>
     ${environmentLine}
     <p class="item-meta">診断理由: ${escapeHtml(record.diag.reasons.join(" / "))}</p>
+    ${postedLine}
+    <div class="head-actions">
+      <button
+        class="${publishClass}"
+        type="button"
+        data-action="publish-winner"
+        data-generation="${generation}"
+        data-individual-id="${escapeHtml(record.individualId)}"
+        ${posted ? "disabled" : ""}
+      >
+        ${publishLabel}
+      </button>
+    </div>
     <div class="detail-grid">
       <div>
         <h4>遺伝子</h4>
@@ -1038,6 +1199,235 @@ function getGenerationData(run, generationNumber) {
 
 function getActiveRun() {
   return state.runs.find((run) => run.runId === state.activeRunId) || null;
+}
+
+function getPostedSpecimen(runId, individualId, generation) {
+  if (!runId || !individualId || !Number.isFinite(generation)) {
+    return null;
+  }
+  const key = buildPostedKey(runId, individualId, generation);
+  return state.publishedSpecimens[key] || null;
+}
+
+function setPostedSpecimen({
+  runId,
+  individualId,
+  generation,
+  specimenId,
+  detailUrl,
+}) {
+  if (!runId || !individualId || !Number.isFinite(generation) || !specimenId) {
+    return;
+  }
+  const key = buildPostedKey(runId, individualId, generation);
+  state.publishedSpecimens[key] = {
+    specimenId,
+    detailUrl: detailUrl || `/specimen/?id=${encodeURIComponent(specimenId)}`,
+  };
+}
+
+function buildPostedKey(runId, individualId, generation) {
+  return `${runId}::g${generation}::${individualId}`;
+}
+
+function prunePublishedByRunId(runId) {
+  if (!runId) {
+    return;
+  }
+  const prefix = `${runId}::`;
+  for (const key of Object.keys(state.publishedSpecimens)) {
+    if (key.startsWith(prefix)) {
+      delete state.publishedSpecimens[key];
+    }
+  }
+}
+
+function buildPublicSpecimenPayload({ run, generation, record }) {
+  return {
+    collector_id: getCollectorId(),
+    poem_text: record.poem,
+    biome: resolveBiomeFromRun(run),
+    season: resolveSeasonFromRecord(record, generation, run),
+    score_total: Number(record.score) || 0,
+    score_breakdown: record.scoreBreakdown || {},
+    genome: record.genome || {},
+    parent_ids: Array.isArray(record.parentIds) ? record.parentIds : [],
+    run_hash: run.runId,
+  };
+}
+
+async function postSpecimen(payload) {
+  const errors = [];
+  const candidates = buildApiBaseCandidates();
+
+  for (const base of candidates) {
+    try {
+      const response = await fetch(`${base}/specimens`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      let body = null;
+      try {
+        body = await response.json();
+      } catch {
+        body = null;
+      }
+
+      if (!response.ok) {
+        let reason = `HTTP ${response.status}`;
+        if (body && typeof body.error === "string") {
+          if (body.error === "rate_limited") {
+            const retryAfter = Number.parseInt(String(body.retry_after_sec || ""), 10);
+            reason = Number.isFinite(retryAfter) && retryAfter > 0
+              ? `投稿が多すぎます。${retryAfter}秒後に再試行してください`
+              : "投稿が多すぎます。しばらく待って再試行してください";
+          } else {
+            reason = body.error;
+          }
+        }
+        errors.push(`${base}: ${reason}`);
+        continue;
+      }
+
+      if (!body?.ok || !body?.specimen_id) {
+        errors.push(`${base}: invalid response payload`);
+        continue;
+      }
+
+      return {
+        specimenId: body.specimen_id,
+        detailUrl: resolveSpecimenDetailUrl(body.url, body.specimen_id),
+      };
+    } catch (error) {
+      const reason = error instanceof Error ? error.message : String(error);
+      errors.push(`${base}: ${reason}`);
+    }
+  }
+
+  const summary =
+    errors.length > 0
+      ? errors.join(" | ")
+      : "API endpoint is unavailable";
+  if (looksLikeApiOffline(errors)) {
+    throw new Error(
+      "標本投稿に失敗しました。APIサーバーが未起動の可能性があります。`npm run api:dev` を別ターミナルで起動してください。",
+    );
+  }
+  throw new Error(
+    `標本投稿に失敗しました。APIサーバーを確認してください。(${summary})`,
+  );
+}
+
+function resolveSpecimenDetailUrl(rawUrl, specimenId) {
+  const fallback = `/specimen/?id=${encodeURIComponent(specimenId)}`;
+  if (typeof rawUrl !== "string" || rawUrl.trim() === "") {
+    return fallback;
+  }
+  try {
+    const resolved = new URL(rawUrl, window.location.origin);
+    return `${resolved.pathname}${resolved.search}`;
+  } catch {
+    return fallback;
+  }
+}
+
+function looksLikeApiOffline(errors) {
+  if (!Array.isArray(errors) || errors.length === 0) {
+    return false;
+  }
+  return errors.every((entry) =>
+    /(Failed to fetch|HTTP 500|ECONNREFUSED|fetch failed|NetworkError)/i.test(
+      String(entry),
+    ),
+  );
+}
+
+function buildApiBaseCandidates() {
+  const fromOrigin =
+    window.location.origin.startsWith("http")
+      ? `${window.location.origin.replace(/\/$/, "")}/api`
+      : "";
+  const bucket = [fromOrigin, ...API_BASE_CANDIDATES];
+  return Array.from(new Set(bucket.filter(Boolean).map((base) => base.replace(/\/$/, ""))));
+}
+
+function resolveBiomeFromRun(run) {
+  const selectedPreset = refs.nutrientPreset.value.trim();
+  if (BIOME_KEYS.has(selectedPreset)) {
+    return selectedPreset;
+  }
+
+  const nutrients = Array.isArray(run?.nutrients) ? run.nutrients : [];
+  const scores = Object.entries(presets).map(([biome, words]) => ({
+    biome,
+    overlap: words.reduce(
+      (count, word) => count + (nutrients.includes(word) ? 1 : 0),
+      0,
+    ),
+  }));
+  const best = scores.sort((left, right) => right.overlap - left.overlap)[0];
+  if (best && best.overlap > 0 && BIOME_KEYS.has(best.biome)) {
+    return best.biome;
+  }
+  return "garden";
+}
+
+function resolveSeasonFromRecord(record, generation, run) {
+  const seasonKey = record?.environment?.seasonKey;
+  if (SEASON_KEYS.has(seasonKey)) {
+    return seasonKey;
+  }
+
+  const configuredSeasons = Array.isArray(run?.environmentConfig?.seasons)
+    ? run.environmentConfig.seasons
+    : [];
+  if (configuredSeasons.length > 0) {
+    const configured = configuredSeasons[(generation - 1) % configuredSeasons.length]?.key;
+    if (SEASON_KEYS.has(configured)) {
+      return configured;
+    }
+  }
+
+  const fallback = ["spring", "summer", "autumn", "winter"][(generation - 1) % 4];
+  return SEASON_KEYS.has(fallback) ? fallback : "spring";
+}
+
+function getCollectorId() {
+  const storageKey = "shisei:collector-id";
+  try {
+    const stored = window.localStorage.getItem(storageKey) || "";
+    if (/^C-[0-9A-Z]{8,20}$/.test(stored)) {
+      return stored;
+    }
+  } catch {
+    // ignore localStorage errors
+  }
+
+  const generated = `C-${generateToken(12)}`;
+  try {
+    window.localStorage.setItem(storageKey, generated);
+  } catch {
+    // ignore localStorage errors
+  }
+  return generated;
+}
+
+function generateToken(length) {
+  const chars = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";
+  const bytes = new Uint8Array(length);
+  if (window.crypto?.getRandomValues) {
+    window.crypto.getRandomValues(bytes);
+  } else {
+    for (let index = 0; index < length; index += 1) {
+      bytes[index] = Math.floor(Math.random() * 256);
+    }
+  }
+  return Array.from(bytes, (byte) => chars[byte % chars.length]).join("");
 }
 
 function setError(message) {

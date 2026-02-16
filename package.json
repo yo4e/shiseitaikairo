@@ -1,0 +1,37 @@
+{
+  "name": "shiseitaikairo",
+  "version": "1.0.0",
+  "description": "詩生態回路: 詩の人工生命シミュレータと情報サイト",
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev",
+    "dev:all": "npm run db:migrate:local && concurrently -n API,WEB -c magenta,cyan \"npm:api:dev\" \"npm:dev\"",
+    "build": "astro build",
+    "preview": "astro preview",
+    "check": "astro check",
+    "api:dev": "wrangler dev --config wrangler.toml --port 8787 --local",
+    "api:deploy": "wrangler deploy --config wrangler.toml",
+    "db:migrate:local": "wrangler d1 migrations apply shiseitaikairo-db --config wrangler.toml --local",
+    "db:migrate:remote": "wrangler d1 migrations apply shiseitaikairo-db --config wrangler.toml"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yo4e/shiseitaikairo.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/yo4e/shiseitaikairo/issues"
+  },
+  "homepage": "https://github.com/yo4e/shiseitaikairo#readme",
+  "dependencies": {
+    "astro": "^5.17.2"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.6",
+    "concurrently": "^9.2.1",
+    "typescript": "^5.9.3",
+    "wrangler": "^4.65.0"
+  }
+}

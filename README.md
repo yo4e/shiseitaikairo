@@ -37,14 +37,57 @@
 
 ## 実行方法
 
-`file://` 直開きでは動かないため、ローカルサーバーで起動してください。
+Astro 開発サーバーで起動します。
 
 ```bash
 cd /Users/yo4e/GitHub/shiseitaikairo
-python3 -m http.server 5173
+npm install
+npm run dev
 ```
 
-ブラウザで `http://localhost:5173` を開きます。
+ブラウザで `http://localhost:4321` を開きます。
+
+- サイトトップ: `/`
+- 公共標本箱: `/cabinet`
+- 標本詳細: `/specimen/?id=<specimen_id>`
+- 使い方: `/how-to`
+- プライバシーポリシー: `/privacy-policy`
+- 既存シミュレータ本体: `/app/index.html`
+
+API込みで一発起動する場合は以下を使います。
+
+```bash
+cd /Users/yo4e/GitHub/shiseitaikairo
+npm run dev:all
+```
+
+`dev:all` はローカルD1マイグレーション実行後に、`astro dev` と `wrangler dev` を同時起動します。
+
+## API（Workers + D1）
+
+公共標本箱向けの最小APIを `workers/api` に追加しています。
+
+```bash
+cd /Users/yo4e/GitHub/shiseitaikairo
+npm run db:migrate:local
+npm run api:dev
+```
+
+ローカルAPI: `http://127.0.0.1:8787`
+
+- `GET /api/health`
+- `POST /api/specimens`
+- `GET /api/specimens`
+- `GET /api/specimens/:specimen_id`
+- `POST /api/specimens/:specimen_id/like`
+- `POST /api/specimens/:specimen_id/report`
+
+補足:
+- `/cabinet` と `/specimen` は API優先で表示し、失敗時はモックにフォールバックします。
+- Astro開発時は `astro.config.mjs` のプロキシで `/api` を `http://127.0.0.1:8787` へ転送します。
+- `wrangler.toml` の `database_id` は実環境用のIDに置き換えてください。
+- 投稿APIはレート制限付きです（超過時 `429 rate_limited` / `Retry-After`）。
+- 投稿総数が上限（`SPECIMEN_MAX_COUNT`）を超えた場合、`likes` が少ない古い標本から自動間引きします。
 
 ## 保存と再現
 
@@ -60,14 +103,23 @@ python3 -m http.server 5173
 
 ## 主要ファイル
 
-- `index.html`: UIレイアウト。
-- `styles.css`: スタイル。
-- `app.js`: UI制御、描画、履歴操作。
-- `domain/genome.js`: 個体初期化、交叉、突然変異。
-- `domain/poem.js`: 詩生成ロジック。
-- `domain/health.js`: 健康診断スコア。
-- `domain/evolution.js`: 世代シミュレーション、季節環境、資源循環、生命ダイナミクス。
-- `storage/db.js`: IndexedDB 永続化。
+- `src/layouts/BaseLayout.astro`: サイト共通レイアウトとSEOメタ。
+- `src/pages/index.astro`: トップページ。
+- `src/pages/how-to.astro`: 使い方ページ。
+- `src/pages/privacy-policy.astro`: プライバシーポリシー。
+- `src/pages/cabinet.astro`: 公共標本箱ページ（API優先 + モックfallback）。
+- `src/pages/specimen/index.astro`: 標本詳細ページ（`?id=` 指定で表示）。
+- `src/scripts/cabinet-client.ts`: 標本一覧のクライアント取得ロジック。
+- `src/scripts/specimen-client.ts`: 標本詳細のクライアント取得ロジック。
+- `workers/api/src/index.ts`: Workers API本体。
+- `workers/api/migrations/0001_init.sql`: D1スキーマ定義。
+- `public/app/index.html`: 既存シミュレータのエントリ。
+- `public/app/styles.css`: シミュレータUIスタイル。
+- `public/app/app.js`: シミュレータUI制御。
+- `public/app/domain/evolution.js`: 世代シミュレーション、季節環境、資源循環、生命ダイナミクス。
+- `public/app/domain/poem.js`: 詩生成ロジック。
+- `public/app/domain/health.js`: 健康診断スコア。
+- `public/app/storage/db.js`: IndexedDB 永続化。
 
 ## 現在の位置づけ
 
