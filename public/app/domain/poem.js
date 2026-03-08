@@ -11,6 +11,12 @@ const CONCRETE_BASE = [
   "種",
   "雨",
   "縄",
+  "汀",
+  "欄干",
+  "灯芯",
+  "砂利",
+  "繭",
+  "膜",
 ];
 
 const ABSTRACT_BASE = [
@@ -26,17 +32,24 @@ const ABSTRACT_BASE = [
   "影",
   "間隔",
   "息",
+  "兆し",
+  "翳り",
+  "気配",
+  "輪郭",
+  "偏り",
+  "残響",
 ];
 
 const ASSERTIVE_ENDINGS = [
   "だ",
   "と決める",
   "である",
-  "は動かない",
   "を選ぶ",
+  "として立つ",
   "を掲げる",
   "と断つ",
   "と名づける",
+  "を言い切る",
 ];
 
 const AFTERGLOW_ENDINGS = [
@@ -48,15 +61,17 @@ const AFTERGLOW_ENDINGS = [
   "遠くで揺れる",
   "余熱を抱える",
   "名残になる",
+  "余白へにじむ",
 ];
 
-const PARTICLE_TOKENS = ["の", "に", "へ", "で", "と"];
-const CONJUNCTION_TOKENS = ["ただ", "そして"];
+const PARTICLE_TOKENS = ["の", "に", "へ", "で", "と", "を"];
+const CONJUNCTION_TOKENS = ["ただ", "そして", "それでも", "やがて", "けれど"];
 const MAX_CONJUNCTIONS_PER_POEM = 1;
+const BASE_TOXIC_INSERTION_CHANCE = 0.1;
 
 export const DEFAULT_POEM_STYLE_CONFIG = {
-  particleRate: 0.1,
-  conjunctionRate: 0.03,
+  particleRate: 0.45,
+  conjunctionRate: 0.85,
 };
 
 export function normalizePoemStyleConfig(config = {}) {
@@ -84,10 +99,12 @@ export function normalizePoemStyleConfig(config = {}) {
 export function generatePoem({
   genome,
   nutrients,
+  toxicWords = [],
   poemStyleConfig,
   rng = Math.random,
 }) {
   const nutrientList = normalizeWords(nutrients);
+  const toxicList = uniqueWords(normalizeWords(toxicWords));
   const nutrientMap = new Map(nutrientList.map((word) => [toKey(word), word]));
   const concretePool = uniqueWords([...CONCRETE_BASE, ...nutrientList]);
   const abstractPool = uniqueWords([...ABSTRACT_BASE, ...nutrientList]);
@@ -132,6 +149,8 @@ export function generatePoem({
     lines[targetLineIndex] = injectToken(lines[targetLineIndex], forcedNutrient, rng);
     usedNutrients.add(forcedNutrient);
   }
+
+  maybeInjectToxicWord(lines, toxicList, genome, rng);
 
   if (lines.length > 0) {
     const endingPool =
@@ -245,6 +264,25 @@ function buildPoemStats(poem) {
     uniqueTokenRatio,
     longestRepeatRun: countLongestRepeat(tokenKeys),
   };
+}
+
+function maybeInjectToxicWord(lines, toxicList, genome, rng) {
+  if (!Array.isArray(lines) || lines.length === 0 || toxicList.length === 0) {
+    return;
+  }
+
+  const contaminationChance = clampNumber(
+    BASE_TOXIC_INSERTION_CHANCE * (1 - genome.immunity * 0.8),
+    0,
+    1,
+    BASE_TOXIC_INSERTION_CHANCE,
+  );
+  if (rng() >= contaminationChance) {
+    return;
+  }
+
+  const targetLineIndex = randomInt(0, lines.length - 1, rng);
+  lines[targetLineIndex] = injectToken(lines[targetLineIndex], pick(toxicList, rng), rng);
 }
 
 function normalizeWords(words) {

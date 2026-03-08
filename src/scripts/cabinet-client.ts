@@ -22,6 +22,13 @@ type ListResponse = {
   items?: ListItem[];
 };
 
+type StatsResponse = {
+  ok: boolean;
+  total_count?: number;
+  biome_counts?: Record<string, number>;
+  season_counts?: Record<string, number>;
+};
+
 type FilterState = {
   biome: string;
   season: string;
@@ -40,6 +47,9 @@ async function boot() {
   const hotContainer = document.getElementById("hot-specimens");
   const newBlock = document.getElementById("cabinet-block-new");
   const hotBlock = document.getElementById("cabinet-block-hot");
+  const biomeCounts = document.getElementById("cabinet-biome-counts");
+  const seasonCounts = document.getElementById("cabinet-season-counts");
+  const totalCount = document.getElementById("cabinet-total-count");
   const biomeSelect = document.getElementById("filter-biome");
   const seasonSelect = document.getElementById("filter-season");
   const applyButton = document.getElementById("apply-filters");
@@ -63,13 +73,15 @@ async function boot() {
     syncQuery(filters, currentView);
 
     try {
-      const [newResult, hotResult] = await Promise.all([
+      const [newResult, hotResult, statsResult] = await Promise.all([
         fetchList(`${apiBase}/specimens?sort=new&limit=20${query}`),
         fetchList(`${apiBase}/specimens?sort=hot&limit=20${query}`),
+        fetchStats(`${apiBase}/specimens/stats`),
       ]);
 
       newContainer.innerHTML = renderCards(newResult.items || [], false, "新着");
       hotContainer.innerHTML = renderCards(hotResult.items || [], true, "人気");
+      renderAggregateCounts(biomeCounts, seasonCounts, totalCount, statsResult);
       setStatus(
         status,
         `${buildFilterLabel(filters)}でAPI表示しています。`,
@@ -80,6 +92,7 @@ async function boot() {
       const [newItems, hotItems] = buildMockCards(filters);
       newContainer.innerHTML = renderCards(newItems, false, "新着");
       hotContainer.innerHTML = renderCards(hotItems, true, "人気");
+      renderMockAggregateCounts(biomeCounts, seasonCounts, totalCount);
       setStatus(
         status,
         `${buildFilterLabel(filters)}でモック表示中です（API未接続）。`,
@@ -136,6 +149,25 @@ async function fetchList(url: string): Promise<ListResponse> {
   }
 
   const payload = (await response.json()) as ListResponse;
+  if (!payload.ok) {
+    throw new Error("api returned not ok");
+  }
+
+  return payload;
+}
+
+async function fetchStats(url: string): Promise<StatsResponse> {
+  const response = await fetch(url, {
+    headers: {
+      Accept: "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`request failed: ${response.status}`);
+  }
+
+  const payload = (await response.json()) as StatsResponse;
   if (!payload.ok) {
     throw new Error("api returned not ok");
   }
@@ -255,6 +287,66 @@ function buildFilterLabel(filters: FilterState): string {
     ? SEASON_LABELS[filters.season as keyof typeof SEASON_LABELS] || filters.season
     : "全季節";
   return `${biomeLabel} / ${seasonLabel}`;
+}
+
+function renderAggregateCounts(
+  biomeRoot: HTMLElement | null,
+  seasonRoot: HTMLElement | null,
+  totalRoot: HTMLElement | null,
+  stats: StatsResponse,
+) {
+  if (biomeRoot) {
+    biomeRoot.innerHTML = Object.entries(BIOME_LABELS)
+      .map(([key, label]) => {
+        const count = Number(stats.biome_counts?.[key] || 0);
+        return `<li>${escapeHtml(label)}: ${count}件</li>`;
+      })
+      .join("");
+  }
+
+  if (seasonRoot) {
+    seasonRoot.innerHTML = Object.entries(SEASON_LABELS)
+      .map(([key, label]) => {
+        const count = Number(stats.season_counts?.[key] || 0);
+        return `<li>${escapeHtml(label)}: ${count}件</li>`;
+      })
+      .join("");
+  }
+
+  if (totalRoot) {
+    totalRoot.textContent = `公開標本数: ${Number(stats.total_count || 0)}件`;
+  }
+}
+
+function renderMockAggregateCounts(
+  biomeRoot: HTMLElement | null,
+  seasonRoot: HTMLElement | null,
+  totalRoot: HTMLElement | null,
+) {
+  const biomeCounts = Object.entries(BIOME_LABELS).map(([key, label]) => ({
+    label,
+    count: PUBLIC_SPECIMENS.filter((item) => item.biome === key).length,
+  }));
+  const seasonCounts = Object.entries(SEASON_LABELS).map(([key, label]) => ({
+    label,
+    count: PUBLIC_SPECIMENS.filter((item) => item.season === key).length,
+  }));
+
+  if (biomeRoot) {
+    biomeRoot.innerHTML = biomeCounts
+      .map((entry) => `<li>${escapeHtml(entry.label)}: ${entry.count}件</li>`)
+      .join("");
+  }
+
+  if (seasonRoot) {
+    seasonRoot.innerHTML = seasonCounts
+      .map((entry) => `<li>${escapeHtml(entry.label)}: ${entry.count}件</li>`)
+      .join("");
+  }
+
+  if (totalRoot) {
+    totalRoot.textContent = `公開標本数: ${PUBLIC_SPECIMENS.length}件`;
+  }
 }
 
 function buildMockCards(filters: FilterState): [ListItem[], ListItem[]] {

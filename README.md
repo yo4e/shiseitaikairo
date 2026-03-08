@@ -78,6 +78,7 @@ npm run api:dev
 - `GET /api/health`
 - `POST /api/specimens`
 - `GET /api/specimens`
+- `GET /api/specimens/stats`
 - `GET /api/specimens/:specimen_id`
 - `POST /api/specimens/:specimen_id/like`
 - `POST /api/specimens/:specimen_id/report`
@@ -87,6 +88,7 @@ npm run api:dev
 - Astro開発時は `astro.config.mjs` のプロキシで `/api` を `http://127.0.0.1:8787` へ転送します。
 - `wrangler.toml` の `database_id` は実環境用のIDに置き換えてください。
 - 投稿APIはレート制限付きです（超過時 `429 rate_limited` / `Retry-After`）。
+- 投稿・いいね・通報では、乱用防止のために IP / User-Agent 由来のハッシュを利用します（生値は保存しません）。
 - 投稿総数が上限（`SPECIMEN_MAX_COUNT`）を超えた場合、`likes` が少ない古い標本から自動間引きします。
 
 ## 保存と再現
@@ -94,6 +96,7 @@ npm run api:dev
 - 実行履歴は IndexedDB に保存されます。
 - 保存対象は実行設定（個体数、世代数、シード、栄養語、毒語、進化設定、詩設定、環境設定、生命設定）。
 - 保存対象は各世代の全個体記録（詩、遺伝子、親ID、診断、環境、エネルギー）。
+- 公共標本箱へ明示的に投稿した個体だけが、公開用DBに保存されます。
 - 同じシード＋同じ設定なら、同じ進化系列を再現できます。
 
 ## 利用例

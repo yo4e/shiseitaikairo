@@ -4,66 +4,84 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 
 <BaseLayout
   title="トップ"
-  description="詩生態回路の公式サイト。詩の人工生命シミュレータ、使い方、ポリシーをまとめています。"
+  description="詩生態回路の公式サイト。詩を個体として進化させる人工生命シミュレータ、使い方、ポリシーをまとめています。"
 >
   <section class="hero">
-    <h1>言葉を資源にして、生存競争する詩の群れ</h1>
+    <p class="eyebrow">詩の人工生命シミュレータ</p>
+    <h1>言葉を資源に、詩を進化させる</h1>
     <p>
-      詩生態回路は、詩の個体群が生成・淘汰・進化していく人工生命シミュレータです。<br />
-      季節環境、資源枯渇、エネルギー収支などの要素で、生態系としての挙動を観察できます。
+      詩生態回路では、詩は個体として生まれます。環境に適応した個体が生き残り、交叉と突然変異で系統が分かれていきます。<br />
+      あなたは一篇を直接書くのではなく、生態系の初期条件を与えて、世代ごとの変化を観察します。
     </p>
+    <div class="chip-list" aria-label="人工生命の要素">
+      <span class="chip">個体</span>
+      <span class="chip">環境</span>
+      <span class="chip">淘汰</span>
+      <span class="chip">交叉と突然変異</span>
+      <span class="chip">標本保存</span>
+    </div>
     <div class="hero-actions">
-      <a class="button primary" href="/app/index.html">シミュレータを開く</a>
+      <a class="button primary" href="/app/index.html">ガイドつきで始める</a>
       <a class="button secondary" href="/cabinet">公共標本箱を見る</a>
-      <a class="button secondary" href="/how-to">使い方を見る</a>
+      <a class="button secondary" href="/how-to">仕組みを見る</a>
     </div>
   </section>
 
   <section class="page-grid" aria-label="コンテンツ案内">
     <article class="card">
-      <h2>詩方面の特徴</h2>
-      <ul>
-        <li>遺伝子にもとづく詩生成（行数、具体度、断定度、余韻度など）</li>
-        <li>助詞・接続詞の可変挿入</li>
-        <li>末尾語尾の断定系 / 余韻系バリエーション</li>
-      </ul>
+      <h2>これは何か</h2>
+      <p>
+        ただの詩ジェネレーターではなく、詩を「個体」として扱う観察装置です。個体ごとに遺伝子、健康診断、
+        親子関係があり、環境の偏りや汚染に適応した系統が次世代へ残ります。
+      </p>
     </article>
 
     <article class="card">
-      <h2>人工生命方面の特徴</h2>
+      <h2>最初の遊び方</h2>
+      <ol class="step-list">
+        <li>世界の雰囲気に近いプリセットを選んで、資源語と汚染語を読み込む</li>
+        <li>数世代ぶん生態系を回して、生存数と勝者の変化を見る</li>
+        <li>気に入った個体を標本として残し、公共標本箱で見返す</li>
+      </ol>
+    </article>
+
+    <article class="card">
+      <h2>観察できる人工生命のふるまい</h2>
       <ul>
-        <li>選択・交叉・突然変異による世代進化</li>
-        <li>季節と資源循環による環境変動</li>
-        <li>可変個体数とエネルギー収支</li>
+        <li>季節環境と汚染語によって変わる生存傾向</li>
+        <li>淘汰の結果として残る文体の系統差</li>
+        <li>親IDと突然変異による世代のつながり</li>
       </ul>
     </article>
 
     <article class="card">
       <h3>公共標本箱</h3>
       <p>
-        一覧と標本詳細を公開中です。API接続時は実データ、未接続時はモック表示で動作します。
+        育った個体を公開標本として残せます。先に標本を眺めると、この世界でどんな個体が生き残るのか掴みやすくなります。
       </p>
       <a class="button secondary" href="/cabinet">公共標本箱へ</a>
     </article>
 
     <article class="card">
-      <h3>使い方</h3>
+      <h3>使い方と見どころ</h3>
       <p>
-        基本操作、各パラメータの意味、観察ポイントをまとめています。
+        パラメータの意味だけでなく、「どこを見ると人工生命らしさが見えるか」をまとめています。
       </p>
       <a class="button secondary" href="/how-to">How To ページへ</a>
     </article>
 
     <article class="card">
-      <h3>ポリシー</h3>
-      <p>
-        データの扱い、今後予定している公共標本箱の投稿方針などの土台を記載しています。
-      </p>
-      <a class="button secondary" href="/privacy-policy">プライバシーポリシーへ</a>
+      <h3>シミュレータでできること</h3>
+      <ul>
+        <li>世代ごとの勝者、死亡個体、生存数の観察</li>
+        <li>生態系マップで見る文体の分布</li>
+        <li>履歴保存とシード再観測</li>
+      </ul>
     </article>
   </section>
 
   <p class="notice">
-    既存シミュレータ本体は <a href="/app/index.html">/app/index.html</a> で稼働します。
+    おすすめは、<a href="/app/index.html">/app/index.html</a> で一度生態系を回してから、
+    <a href="/cabinet">公共標本箱</a> でどんな個体が残ったかを見比べる流れです。
   </p>
 </BaseLayout>

@@ -180,6 +180,7 @@ function evaluateGeneration({
     const { poem, meta } = generatePoem({
       genome: individual.genome,
       nutrients: activeNutrients,
+      toxicWords,
       poemStyleConfig,
       rng,
     });

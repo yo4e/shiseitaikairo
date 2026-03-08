@@ -51,8 +51,11 @@ const seasonFilterOptions = Object.entries(SEASON_LABELS).map(([key, label]) => 
   <section class="hero">
     <h1>公共標本箱</h1>
     <p>
-      生成された個体を投稿して共有するための土台ページです。<br />
-      APIが利用可能な環境では実データを表示し、未接続時はモック表示に切り替わります。
+      生成された個体を投稿して共有するための公開標本箱です。<br />
+      APIが利用可能な環境では実データと実件数を表示し、未接続時はモック表示に切り替わります。
+    </p>
+    <p class="notice status-warn">
+      現在テスト運用中のため、公開標本箱の標本は不定期に全削除されることがあります。
     </p>
     <div class="hero-actions">
       <a class="button primary" href="/app/index.html">シミュレータで個体を作る</a>
@@ -156,7 +159,7 @@ const seasonFilterOptions = Object.entries(SEASON_LABELS).map(([key, label]) => 
   <section class="page-grid" aria-label="集計情報">
     <article class="card">
       <h3>バイオーム内訳</h3>
-      <ul>
+      <ul id="cabinet-biome-counts">
         {
           biomeCounts.map((entry) => (
             <li>{entry.label}: {entry.count}件</li>
@@ -167,7 +170,7 @@ const seasonFilterOptions = Object.entries(SEASON_LABELS).map(([key, label]) => 
 
     <article class="card">
       <h3>季節内訳</h3>
-      <ul>
+      <ul id="cabinet-season-counts">
         {
           seasonCounts.map((entry) => (
             <li>{entry.label}: {entry.count}件</li>
@@ -177,6 +180,9 @@ const seasonFilterOptions = Object.entries(SEASON_LABELS).map(([key, label]) => 
     </article>
   </section>
 
+  <p class="notice" id="cabinet-total-count">
+    公開標本数: {PUBLIC_SPECIMENS.length}件
+  </p>
   <p class="notice status-warn" id="cabinet-status">
     公共標本箱の表示を初期化しました。
   </p>
