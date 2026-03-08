@@ -6,13 +6,19 @@
   "scripts": {
     "dev": "astro dev",
     "dev:all": "npm run db:migrate:local && concurrently -n API,WEB -c magenta,cyan \"npm:api:dev\" \"npm:dev\"",
+    "dev:smoke:web": "ASTRO_API_PROXY_TARGET=http://127.0.0.1:8788 astro dev --host 127.0.0.1 --port 4323",
+    "dev:smoke": "concurrently -n API,WEB -c magenta,cyan \"npm:api:dev:smoke\" \"npm:dev:smoke:web\"",
     "build": "astro build",
     "preview": "astro preview",
     "check": "astro check",
+    "test:smoke": "playwright test tests/public-cabinet.smoke.spec.ts",
     "api:dev": "wrangler dev --config wrangler.toml --port 8787 --local",
+    "api:dev:smoke": "wrangler dev --config wrangler.toml --port 8788 --local --persist-to .wrangler/playwright",
     "api:deploy": "wrangler deploy --config wrangler.toml",
     "db:migrate:local": "wrangler d1 migrations apply shiseitaikairo-db --config wrangler.toml --local",
-    "db:migrate:remote": "wrangler d1 migrations apply shiseitaikairo-db --config wrangler.toml"
+    "db:migrate:remote": "wrangler d1 migrations apply shiseitaikairo-db --config wrangler.toml",
+    "db:migrate:smoke": "wrangler d1 migrations apply shiseitaikairo-db --config wrangler.toml --local --persist-to .wrangler/playwright",
+    "db:reset:smoke": "node --input-type=module -e \"import { rmSync } from 'node:fs'; rmSync('.wrangler/playwright', { recursive: true, force: true });\""
   },
   "repository": {
     "type": "git",
@@ -30,6 +36,7 @@
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.6",
+    "@playwright/test": "^1.58.2",
     "concurrently": "^9.2.1",
     "typescript": "^5.9.3",
     "wrangler": "^4.65.0"

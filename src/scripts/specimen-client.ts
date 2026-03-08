@@ -36,6 +36,28 @@ const GENOME_LABELS: Record<string, string> = {
   nutrientMix: "栄養混入率",
   immunity: "免疫",
 };
+const GENOME_ORDER = [
+  "lines",
+  "lineLen",
+  "assertiveness",
+  "afterglow",
+  "concreteness",
+  "repetition",
+  "nutrientMix",
+  "immunity",
+] as const;
+const SCORE_BREAKDOWN_LABELS: Record<string, string> = {
+  metabolismScore: "代謝スコア",
+  structureScore: "構造スコア",
+  toxinPenalty: "毒ペナルティ",
+  repetitionPenalty: "反復ペナルティ",
+};
+const SCORE_BREAKDOWN_ORDER = [
+  "metabolismScore",
+  "structureScore",
+  "toxinPenalty",
+  "repetitionPenalty",
+] as const;
 
 let currentSpecimenId = "";
 
@@ -165,19 +187,22 @@ function renderSpecimen(item: ApiDetail) {
 
   const diagnosis = document.getElementById("specimen-diagnosis");
   if (diagnosis) {
-    const breakdownEntries = Object.entries(item.score_breakdown || {});
+    const breakdownEntries = getOrderedEntries(item.score_breakdown || {}, SCORE_BREAKDOWN_ORDER);
     if (breakdownEntries.length === 0) {
       diagnosis.innerHTML = "<li>診断メモなし</li>";
     } else {
       diagnosis.innerHTML = breakdownEntries
-        .map(([key, value]) => `<li>${escapeHtml(key)}: ${formatUnknownNumber(value)}</li>`)
+        .map(([key, value]) => {
+          const label = SCORE_BREAKDOWN_LABELS[key] || key;
+          return `<li>${escapeHtml(label)}: ${formatUnknownNumber(value)}</li>`;
+        })
         .join("");
     }
   }
 
   const rows = document.getElementById("specimen-genome-rows");
   if (rows) {
-    const entries = Object.entries(item.genome || {});
+    const entries = getOrderedEntries(item.genome || {}, GENOME_ORDER);
     rows.innerHTML = entries
       .map(([key, value]) => {
         const label = GENOME_LABELS[key] || key;
@@ -270,6 +295,15 @@ function formatUnknownNumber(value: unknown): string {
     return String(value ?? "");
   }
   return Number.isInteger(parsed) ? String(parsed) : parsed.toFixed(3);
+}
+
+function getOrderedEntries(
+  source: Record<string, number | string>,
+  order: readonly string[],
+): Array<[string, number | string]> {
+  return order
+    .filter((key) => key in source)
+    .map((key) => [key, source[key]] as [string, number | string]);
 }
 
 function escapeHtml(value: unknown): string {

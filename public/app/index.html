@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>詩生態回路 - M2プロトタイプ</title>
+    <title>詩生態回路 | 詩の人工生命シミュレータ</title>
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
@@ -25,9 +25,73 @@
       <header class="page-header">
         <h1>詩生態回路</h1>
         <p class="tagline">
-          M2プロトタイプ：世代進化とシード再現に対応
+          言葉を資源に、詩の個体群が淘汰と変異をくり返す人工生命シミュレータ
         </p>
       </header>
+
+      <section class="panel guide-panel" aria-labelledby="guide-title">
+        <div class="guide-grid">
+          <div>
+            <p class="guide-kicker">初めての人へ</p>
+            <h2 id="guide-title">これは、一篇を出力する道具というより、言葉の生態系を育てて観察する場です</h2>
+            <p class="guide-copy">
+              資源語を与えると、詩は個体として発生します。季節と汚染のある環境で淘汰され、残った系統が交叉と突然変異で次世代を作ります。
+            </p>
+            <div class="guide-pill-row" aria-label="人工生命の要素">
+              <span class="guide-pill">個体</span>
+              <span class="guide-pill">環境</span>
+              <span class="guide-pill">淘汰</span>
+              <span class="guide-pill">交叉</span>
+              <span class="guide-pill">突然変異</span>
+            </div>
+          </div>
+
+          <div class="guide-side">
+            <h3>最初の3ステップ</h3>
+            <ol class="guide-steps">
+              <li>世界の雰囲気に近いプリセットを選ぶ</li>
+              <li>生態系を数世代ぶん回して、生存数と死因、勝者の変化を見る</li>
+              <li>気に入った個体を標本として残す</li>
+            </ol>
+
+            <div class="quick-start-grid" id="quick-start-actions">
+              <button
+                class="quick-start-button"
+                type="button"
+                data-quick-preset="garden"
+                data-population="24"
+                data-generations="4"
+                data-quick-label="庭園の生態系"
+              >
+                庭園で始める
+              </button>
+              <button
+                class="quick-start-button"
+                type="button"
+                data-quick-preset="body"
+                data-population="28"
+                data-generations="4"
+                data-quick-label="身体の生態系"
+              >
+                身体で始める
+              </button>
+              <button
+                class="quick-start-button"
+                type="button"
+                data-quick-preset="harbor"
+                data-population="20"
+                data-generations="5"
+                data-quick-label="港湾の生態系"
+              >
+                港湾で始める
+              </button>
+            </div>
+          </div>
+        </div>
+        <p class="guide-note">
+          難しい設定はあとからで大丈夫です。まずは下の「最初に触る設定」だけで、生態系のふるまいと死因の偏りを見られます。
+        </p>
+      </section>
 
       <div class="layout-columns">
         <div class="layout-column layout-column-left">
@@ -35,130 +99,183 @@
             class="panel controls-panel layout-controls"
             aria-labelledby="controls-title"
           >
-            <h2 id="controls-title">設定</h2>
+            <h2 id="controls-title">生態系の初期条件</h2>
             <form id="controls-form" novalidate>
-              <div class="grid">
-                <label for="nutrient-preset">栄養語プリセット</label>
-                <select id="nutrient-preset" name="nutrientPreset">
-                  <option value="">カスタム</option>
-                  <option value="garden">庭園</option>
-                  <option value="work">仕事</option>
-                  <option value="cosmic">宇宙</option>
-                  <option value="body">身体</option>
-                  <option value="harbor">港湾</option>
-                  <option value="ritual">儀式</option>
-                </select>
+              <p class="panel-lead">
+                まずは世界の雰囲気、資源語、汚染語、個体数、世代数だけで十分です。細かい淘汰や突然変異の調整はあとから行えます。
+              </p>
 
-                <label for="nutrients">栄養語（カンマ区切り）</label>
-                <textarea
-                  id="nutrients"
-                  name="nutrients"
-                  rows="3"
-                  placeholder="ルッコラ, フェンネル, 瓶, 水, 風"
-                ></textarea>
+              <section class="control-section" aria-labelledby="quick-controls-title">
+                <h3 id="quick-controls-title">最初に触る設定</h3>
+                <div class="grid control-grid">
+                  <label for="nutrient-preset">世界の雰囲気</label>
+                  <div class="field-stack">
+                    <select id="nutrient-preset" name="nutrientPreset">
+                      <option value="">カスタム</option>
+                      <option value="garden">庭園</option>
+                      <option value="work">仕事</option>
+                      <option value="cosmic">宇宙</option>
+                      <option value="body">身体</option>
+                      <option value="harbor">港湾</option>
+                      <option value="ritual">儀式</option>
+                    </select>
+                    <p class="field-help">まずはここを選ぶと、その世界に合った資源語が自動で入ります。</p>
+                  </div>
 
-                <label for="toxic-words">毒語（任意）</label>
-                <input
-                  id="toxic-words"
-                  name="toxicWords"
-                  type="text"
-                  placeholder="許諾不明, 注意"
-                />
+                  <label for="nutrients">栄養語（資源）</label>
+                  <div class="field-stack">
+                    <textarea
+                      id="nutrients"
+                      name="nutrients"
+                      rows="3"
+                      placeholder="ルッコラ, フェンネル, 瓶, 水, 風"
+                    ></textarea>
+                    <p class="field-help">ここに入れた語が、生き残りを左右する資源になります。</p>
+                  </div>
 
-                <label for="population">個体数</label>
-                <input
-                  id="population"
-                  name="population"
-                  type="number"
-                  min="1"
-                  max="300"
-                  value="30"
-                />
+                  <label for="toxic-words">毒語（汚染）</label>
+                  <div class="field-stack">
+                    <input
+                      id="toxic-words"
+                      name="toxicWords"
+                      type="text"
+                      placeholder="許諾不明, 注意"
+                    />
+                    <p class="field-help">ここにある語は診断の対象になり、生成中にも低確率で紛れ込みます。未編集のあいだはプリセット変更時にランダムな汚染語へ更新され、手で編集するとその語を固定します。</p>
+                  </div>
 
-                <label for="generation-count">世代数</label>
-                <input
-                  id="generation-count"
-                  name="generationCount"
-                  type="number"
-                  min="1"
-                  max="20"
-                  value="3"
-                />
+                  <label for="population">個体数</label>
+                  <div class="field-stack">
+                    <input
+                      id="population"
+                      name="population"
+                      type="number"
+                      min="1"
+                      max="300"
+                      value="30"
+                    />
+                    <p class="field-help">1世代にどれくらいの個体が生まれるかを決めます。</p>
+                  </div>
 
-                <label for="seed">シード（任意）</label>
-                <input
-                  id="seed"
-                  name="seed"
-                  type="number"
-                  placeholder="未入力なら自動生成"
-                />
+                  <label for="generation-count">世代数</label>
+                  <div class="field-stack">
+                    <input
+                      id="generation-count"
+                      name="generationCount"
+                      type="number"
+                      min="1"
+                      max="20"
+                      value="3"
+                    />
+                    <p class="field-help">何世代ぶん進化の流れを観察するかを決めます。</p>
+                  </div>
+                </div>
+              </section>
 
-                <label for="elite-ratio">エリート比率</label>
-                <input
-                  id="elite-ratio"
-                  name="eliteRatio"
-                  type="number"
-                  min="0"
-                  max="1"
-                  step="0.01"
-                  value="0.2"
-                />
+              <details class="advanced-controls">
+                <summary>詳細設定をひらく（再現性・淘汰・突然変異・文体）</summary>
+                <div class="advanced-controls-body">
+                  <p class="advanced-copy">
+                    人工生命としての挙動を細かく調整したいときに使います。慣れるまでは初期値のままで問題ありません。
+                  </p>
+                  <div class="grid control-grid">
+                    <label for="seed">シード（任意）</label>
+                    <div class="field-stack">
+                      <input
+                        id="seed"
+                        name="seed"
+                        type="number"
+                        placeholder="未入力なら自動生成"
+                      />
+                      <p class="field-help">同じシードと設定なら、同じ系統を再観測できます。</p>
+                    </div>
 
-                <label for="diversity-ratio">多様性比率</label>
-                <input
-                  id="diversity-ratio"
-                  name="diversityRatio"
-                  type="number"
-                  min="0"
-                  max="1"
-                  step="0.01"
-                  value="0.07"
-                />
+                    <label for="elite-ratio">エリート比率</label>
+                    <div class="field-stack">
+                      <input
+                        id="elite-ratio"
+                        name="eliteRatio"
+                        type="number"
+                        min="0"
+                        max="1"
+                        step="0.01"
+                        value="0.2"
+                      />
+                      <p class="field-help">強い個体をどれだけ残すかです。</p>
+                    </div>
 
-                <label for="mutation-rate">突然変異率</label>
-                <input
-                  id="mutation-rate"
-                  name="mutationRate"
-                  type="number"
-                  min="0"
-                  max="1"
-                  step="0.01"
-                  value="0.12"
-                />
+                    <label for="diversity-ratio">多様性比率</label>
+                    <div class="field-stack">
+                      <input
+                        id="diversity-ratio"
+                        name="diversityRatio"
+                        type="number"
+                        min="0"
+                        max="1"
+                        step="0.01"
+                        value="0.07"
+                      />
+                      <p class="field-help">似すぎた個体ばかりにならないようにします。</p>
+                    </div>
 
-                <label for="mutation-strength">突然変異強度</label>
-                <input
-                  id="mutation-strength"
-                  name="mutationStrength"
-                  type="number"
-                  min="0"
-                  max="1"
-                  step="0.01"
-                  value="0.18"
-                />
+                    <label for="mutation-rate">突然変異率</label>
+                    <div class="field-stack">
+                      <input
+                        id="mutation-rate"
+                        name="mutationRate"
+                        type="number"
+                        min="0"
+                        max="1"
+                        step="0.01"
+                        value="0.12"
+                      />
+                      <p class="field-help">次世代で変化が起きる頻度です。</p>
+                    </div>
 
-                <label for="particle-rate">助詞挿入率</label>
-                <input
-                  id="particle-rate"
-                  name="particleRate"
-                  type="number"
-                  min="0"
-                  max="1"
-                  step="0.01"
-                  value="0.10"
-                />
+                    <label for="mutation-strength">突然変異強度</label>
+                    <div class="field-stack">
+                      <input
+                        id="mutation-strength"
+                        name="mutationStrength"
+                        type="number"
+                        min="0"
+                        max="1"
+                        step="0.01"
+                        value="0.18"
+                      />
+                      <p class="field-help">変化の大きさです。高いほど系統が跳ねやすくなります。</p>
+                    </div>
 
-                <label for="conjunction-rate">接続詞挿入率</label>
-                <input
-                  id="conjunction-rate"
-                  name="conjunctionRate"
-                  type="number"
-                  min="0"
-                  max="1"
-                  step="0.01"
-                  value="0.03"
-                />
-              </div>
+                    <label for="particle-rate">助詞挿入率</label>
+                    <div class="field-stack">
+                      <input
+                        id="particle-rate"
+                        name="particleRate"
+                        type="number"
+                        min="0"
+                        max="1"
+                        step="0.01"
+                        value="0.45"
+                      />
+                      <p class="field-help">詩のつながり方に影響します。</p>
+                    </div>
+
+                    <label for="conjunction-rate">接続詞挿入率</label>
+                    <div class="field-stack">
+                      <input
+                        id="conjunction-rate"
+                        name="conjunctionRate"
+                        type="number"
+                        min="0"
+                        max="1"
+                        step="0.01"
+                        value="0.85"
+                      />
+                      <p class="field-help">文体の流れを変える細かな調整です。</p>
+                    </div>
+                  </div>
+                </div>
+              </details>
 
               <p id="controls-error" class="error-text" aria-live="polite"></p>
               <p id="interaction-status" class="item-meta" aria-live="polite">
@@ -166,8 +283,8 @@
               </p>
 
               <div class="actions">
-                <button id="run-button" type="submit">実行</button>
-                <button id="reset-button" type="button">リセット</button>
+                <button id="run-button" type="submit">生態系を回す</button>
+                <button id="reset-button" type="button">初期値に戻す</button>
               </div>
             </form>
           </section>
@@ -176,7 +293,7 @@
             class="panel speciation-panel layout-speciation"
             aria-labelledby="speciation-title"
           >
-            <h2 id="speciation-title">種分化ビュー</h2>
+            <h2 id="speciation-title">生態系マップ</h2>
             <div id="speciation-wrap" class="plot-wrap">
               <svg
                 id="speciation-plot"
@@ -195,7 +312,7 @@
             class="panel specimen-panel layout-specimen"
             aria-labelledby="specimen-title"
           >
-            <h2 id="specimen-title">標本箱</h2>
+            <h2 id="specimen-title">観察中の標本</h2>
             <div id="specimen-list" class="stack"></div>
           </section>
         </div>
@@ -205,12 +322,12 @@
             class="panel winners-panel layout-winners"
             aria-labelledby="winners-title"
           >
-            <h2 id="winners-title">現在世代</h2>
+            <h2 id="winners-title">現在世代の勝者</h2>
             <div id="generation-tabs" class="generation-tabs"></div>
             <div id="winners-list" class="stack"></div>
             <div id="winner-detail" class="detail-panel">
               <p class="empty-state">
-                勝者を選ぶと遺伝子と診断詳細を表示します。
+                生き残った個体を選ぶと、遺伝子と診断詳細を表示します。
               </p>
             </div>
           </section>

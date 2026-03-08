@@ -27,6 +27,11 @@ const presets = {
     "種",
     "葉脈",
     "露",
+    "湿り",
+    "根",
+    "木漏れ日",
+    "鉢",
+    "芽吹き",
   ],
   work: [
     "注意",
@@ -39,6 +44,11 @@ const presets = {
     "差戻し",
     "承認",
     "進捗",
+    "机上",
+    "朱線",
+    "欄外",
+    "夜業",
+    "封緘",
   ],
   cosmic: [
     "時間",
@@ -51,6 +61,11 @@ const presets = {
     "星図",
     "地平線",
     "夜明け",
+    "薄明",
+    "星雲",
+    "残光",
+    "磁場",
+    "潮汐",
   ],
   body: [
     "脈",
@@ -63,6 +78,11 @@ const presets = {
     "耳",
     "肩甲",
     "神経",
+    "まぶた",
+    "体温",
+    "脈拍",
+    "爪",
+    "傷痕",
   ],
   harbor: [
     "港",
@@ -75,6 +95,11 @@ const presets = {
     "桟橋",
     "帆",
     "船影",
+    "岬",
+    "波紋",
+    "沖",
+    "潮目",
+    "舷",
   ],
   ritual: [
     "祈り",
@@ -87,6 +112,11 @@ const presets = {
     "輪",
     "印",
     "沈香",
+    "紙垂",
+    "燭",
+    "余燼",
+    "掌",
+    "香煙",
   ],
 };
 
@@ -103,6 +133,12 @@ const TOXIC_WORD_POOL = [
   "欠損",
   "過熱",
   "漏洩",
+  "煤け",
+  "凍結",
+  "ひび",
+  "閉塞",
+  "沈殿",
+  "濁流",
 ];
 
 const DEFAULT_TOXIC_WORD_COUNT = 2;
@@ -143,6 +179,8 @@ const state = {
   activeWinnerId: null,
   storageReady: false,
   publishedSpecimens: {},
+  toxicWordsMode: "auto",
+  detailRevealTimer: null,
 };
 
 const refs = {
@@ -161,6 +199,8 @@ const refs = {
   conjunctionRate: document.querySelector("#conjunction-rate"),
   error: document.querySelector("#controls-error"),
   interactionStatus: document.querySelector("#interaction-status"),
+  quickStartActions: document.querySelector("#quick-start-actions"),
+  runButton: document.querySelector("#run-button"),
   generationTabs: document.querySelector("#generation-tabs"),
   winnersList: document.querySelector("#winners-list"),
   winnerDetail: document.querySelector("#winner-detail"),
@@ -183,8 +223,8 @@ async function boot() {
   renderEmptyState();
   applyEvolutionConfigToForm(DEFAULT_EVOLUTION_CONFIG);
   applyPoemStyleConfigToForm(DEFAULT_POEM_STYLE_CONFIG);
-  refs.toxicWords.value = buildRandomToxicWords(DEFAULT_TOXIC_WORD_COUNT);
-  setInteractionStatus("待機中");
+  applyAutoToxicWords({ force: true });
+  setInteractionStatus("待機中。おすすめ条件を選ぶか、資源語を入れて生態系を回してください。");
 
   window.__shiseiOnWinnerInline = (individualId) => {
     onWinnerSelectById(individualId);
@@ -196,7 +236,9 @@ async function boot() {
   refs.form.addEventListener("submit", onRun);
   refs.nutrientPreset.addEventListener("change", onPresetChange);
   refs.nutrients.addEventListener("input", onNutrientInput);
+  refs.toxicWords.addEventListener("input", onToxicWordsInput);
   refs.resetButton.addEventListener("click", onReset);
+  refs.quickStartActions?.addEventListener("click", onQuickStart);
   refs.generationTabs.addEventListener("click", onGenerationSelect);
   refs.speciationPlot.addEventListener("click", onSpeciationSelect);
   refs.winnerDetail.addEventListener("click", onWinnerDetailAction);
@@ -261,6 +303,37 @@ async function hydrateFromStorage() {
 
 function onPresetChange(event) {
   const presetKey = event.target.value;
+  applyPresetWords(presetKey);
+  applyAutoToxicWords();
+}
+
+function onToxicWordsInput() {
+  state.toxicWordsMode = "manual";
+}
+
+function onQuickStart(event) {
+  const button = getClosestTarget(event, "button[data-quick-preset]");
+  if (!(button instanceof HTMLButtonElement)) {
+    return;
+  }
+
+  const presetKey = button.dataset.quickPreset || "";
+  const population = sanitizeInt(button.dataset.population, 24, 1, 300);
+  const generationCount = sanitizeInt(button.dataset.generations, 4, 1, 20);
+  const label = button.dataset.quickLabel || presetKey;
+
+  refs.nutrientPreset.value = presetKey;
+  applyPresetWords(presetKey);
+  applyAutoToxicWords();
+  refs.population.value = String(population);
+  refs.generationCount.value = String(generationCount);
+  refs.seed.value = "";
+  clearError();
+  setInteractionStatus(`おすすめ条件を読み込みました: ${label}`);
+  refs.runButton?.focus();
+}
+
+function applyPresetWords(presetKey) {
   if (!presetKey || !presets[presetKey]) {
     return;
   }
@@ -287,7 +360,7 @@ function onNutrientInput(event) {
 async function onRun(event) {
   event.preventDefault();
   clearError();
-  setInteractionStatus("実行開始");
+  setInteractionStatus("生態系を回しています...");
 
   const nutrients = parseWordList(refs.nutrients.value);
   const toxicWords = parseWordList(refs.toxicWords.value);
@@ -346,7 +419,7 @@ async function onRun(event) {
   upsertRun(run);
   setActiveRun(run);
   refs.seed.value = String(run.seed);
-  setInteractionStatus(`実行完了: ${run.runId}`);
+  setInteractionStatus(`生態系の実行完了: ${run.runId}`);
   renderRun(run);
   renderHistory();
 }
@@ -419,6 +492,7 @@ function onWinnerSelectById(individualId) {
   state.activeWinnerId = winner.individualId;
   setInteractionStatus(`詳細表示: ${winner.individualId}`);
   renderRun(run);
+  revealWinnerDetail();
 }
 
 function onSpeciationSelect(event) {
@@ -693,7 +767,7 @@ function onReset() {
   refs.population.value = "30";
   refs.generationCount.value = "3";
   refs.seed.value = "";
-  refs.toxicWords.value = buildRandomToxicWords(DEFAULT_TOXIC_WORD_COUNT);
+  applyAutoToxicWords({ force: true });
   applyEvolutionConfigToForm(DEFAULT_EVOLUTION_CONFIG);
   applyPoemStyleConfigToForm(DEFAULT_POEM_STYLE_CONFIG);
 
@@ -702,6 +776,7 @@ function onReset() {
   state.activeWinnerId = null;
 
   clearError();
+  setInteractionStatus("初期値に戻しました。まずは世界の雰囲気を選んでみてください。");
   renderEmptyState();
   renderHistory();
 }
@@ -712,6 +787,7 @@ function hydrateForm(run) {
   refs.seed.value = String(run.seed);
   refs.nutrients.value = run.nutrients.join(", ");
   refs.toxicWords.value = run.toxicWords.join(", ");
+  state.toxicWordsMode = "manual";
   applyEvolutionConfigToForm(run.evolutionConfig || DEFAULT_EVOLUTION_CONFIG);
   applyPoemStyleConfigToForm(run.poemStyleConfig || DEFAULT_POEM_STYLE_CONFIG);
 }
@@ -757,9 +833,10 @@ function renderGenerationTabs(generations, activeGeneration) {
       const seasonLabel = generation.environment?.seasonLabel
         ? ` / ${generation.environment.seasonLabel}`
         : "";
+      const lifeSummary = formatGenerationLifeSummary(generation);
       return `
       <button class="generation-pill${activeClass}" type="button" data-generation="${generation.generation}">
-        第${generation.generation}世代${seasonLabel}（生存${generation.livingCount} / 死亡${generation.deadCount}）
+        第${generation.generation}世代${seasonLabel}（${lifeSummary}）
       </button>
     `;
     })
@@ -780,7 +857,7 @@ function renderWinners(generationData) {
     .map((winner, idx) => {
       const selectedClass =
         winner.individualId === state.activeWinnerId ? " selected" : "";
-      const deadLabel = winner.diag.isDead ? "・死亡" : "";
+      const deadLabel = winner.diag.isDead ? `・${getLifeStateLabel(winner)}` : "";
 
       return `
       <article class="item-card${selectedClass}">
@@ -915,6 +992,7 @@ function renderSpeciation(records) {
       if (record.individualId === state.activeWinnerId) {
         classNames.push("selected");
       }
+      const lifeState = getLifeStateLabel(record);
 
       return `
         <circle
@@ -924,7 +1002,7 @@ function renderSpeciation(records) {
           r="${radius.toFixed(2)}"
           data-individual-id="${escapeHtml(record.individualId)}"
         >
-          <title>${escapeHtml(record.individualId)} / スコア ${record.score.toFixed(2)}</title>
+          <title>${escapeHtml(record.individualId)} / スコア ${record.score.toFixed(2)} / ${escapeHtml(lifeState)}</title>
         </circle>
       `;
     })
@@ -951,7 +1029,7 @@ function renderSpeciation(records) {
     `断定-余韻: ${formatValue(selected.genome.assertiveness - selected.genome.afterglow)}`,
     `具体度: ${formatValue(selected.genome.concreteness)}`,
     `スコア: ${selected.score.toFixed(2)}`,
-    `状態: ${selected.diag.isDead ? "死亡" : "生存"}`,
+    `状態: ${getLifeStateLabel(selected)}`,
   ].join(" / ");
 }
 
@@ -1074,12 +1152,16 @@ function renderWinnerDetail(record, generation, run) {
     : "";
   const publishLabel = posted ? "投稿済み" : "この個体を公共標本箱へ投稿";
   const publishClass = posted ? "tiny-button success" : "tiny-button";
+  const toxicConfiguredText = formatWordListDisplay(record.toxicWords, "なし");
+  const toxicHitText = formatWordListDisplay(record.diag?.toxicHits, "なし");
 
   refs.winnerDetail.innerHTML = `
     <h3>個体詳細: ${escapeHtml(record.individualId)}</h3>
-    <p class="item-meta">世代: ${generation}, スコア: ${record.score.toFixed(2)}, 死亡: ${record.diag.isDead ? "はい" : "いいえ"}</p>
+    <p class="item-meta">世代: ${generation}, スコア: ${record.score.toFixed(2)}, 状態: ${escapeHtml(getLifeStateLabel(record))}</p>
     <p class="item-meta">年齢: ${record.age ?? 0}, エネルギー: ${formatEnergy(record.energy?.before)} → ${formatSigned(record.energy?.delta ?? 0)} → ${formatEnergy(record.energy?.after)}</p>
     ${environmentLine}
+    <p class="item-meta">今回の汚染語: ${escapeHtml(toxicConfiguredText)}</p>
+    <p class="item-meta">検出された毒語: ${escapeHtml(toxicHitText)}</p>
     <p class="item-meta">診断理由: ${escapeHtml(record.diag.reasons.join(" / "))}</p>
     ${postedLine}
     <div class="head-actions">
@@ -1168,15 +1250,15 @@ function renderHistory() {
 
 function renderEmptyState() {
   refs.generationTabs.innerHTML =
-    `<p class="empty-state">実行すると世代タブが表示されます。</p>`;
+    `<p class="empty-state">生態系を回すと、世代ごとの生存数と季節がここに並びます。</p>`;
   refs.winnersList.innerHTML =
-    `<p class="empty-state">実行前です。ここに勝者が表示されます。</p>`;
+    `<p class="empty-state">実行前です。ここに各世代で生き残った個体が表示されます。</p>`;
   refs.winnerDetail.innerHTML =
-    `<p class="empty-state">勝者を選ぶと遺伝子と診断詳細を表示します。</p>`;
+    `<p class="empty-state">個体を選ぶと、遺伝子・診断・親子差分を表示します。</p>`;
   refs.speciationPlot.innerHTML = "";
-  refs.speciationDetail.textContent = "点をクリックすると個体情報を表示します。";
+  refs.speciationDetail.textContent = "生態系を回すと、文体の分布マップがここに表示されます。";
   refs.specimenList.innerHTML =
-    `<p class="empty-state">実行後に標本カードが表示されます。</p>`;
+    `<p class="empty-state">実行後に、気に入った個体を標本として残せます。</p>`;
 }
 
 function renderKeyValueTable(objectValue, labelMap = {}) {
@@ -1494,6 +1576,14 @@ function buildRandomToxicWords(count = DEFAULT_TOXIC_WORD_COUNT) {
   return picks.join(", ");
 }
 
+function applyAutoToxicWords({ force = false } = {}) {
+  if (!force && state.toxicWordsMode === "manual") {
+    return;
+  }
+  refs.toxicWords.value = buildRandomToxicWords(DEFAULT_TOXIC_WORD_COUNT);
+  state.toxicWordsMode = "auto";
+}
+
 function sanitizeInt(value, fallback, min, max) {
   const parsed = Number.parseInt(value, 10);
   if (!Number.isFinite(parsed)) {
@@ -1526,6 +1616,95 @@ function isSameValue(left, right) {
     return Math.abs(left - right) < 0.000001;
   }
   return left === right;
+}
+
+function getDeathCauseKey(record) {
+  if (!record?.diag?.isDead) {
+    return "alive";
+  }
+  if (Array.isArray(record.diag.toxicHits) && record.diag.toxicHits.length > 0) {
+    return "toxic";
+  }
+  if (Array.isArray(record.diag.reasons) && record.diag.reasons.includes("エネルギー枯渇")) {
+    return "starvation";
+  }
+  return "other";
+}
+
+function getLifeStateLabel(record) {
+  switch (getDeathCauseKey(record)) {
+    case "alive":
+      return "生存";
+    case "toxic":
+      return "毒語死";
+    case "starvation":
+      return "飢餓死";
+    default:
+      return "死亡";
+  }
+}
+
+function formatGenerationLifeSummary(generation) {
+  const records = Array.isArray(generation?.records) ? generation.records : [];
+  const counts = {
+    alive: 0,
+    toxic: 0,
+    starvation: 0,
+    other: 0,
+  };
+
+  for (const record of records) {
+    counts[getDeathCauseKey(record)] += 1;
+  }
+
+  const summaryParts = [`生存${counts.alive}`];
+  if (counts.toxic > 0) {
+    summaryParts.push(`毒語死${counts.toxic}`);
+  }
+  if (counts.starvation > 0) {
+    summaryParts.push(`飢餓死${counts.starvation}`);
+  }
+  if (counts.other > 0) {
+    summaryParts.push(`死亡${counts.other}`);
+  }
+
+  return summaryParts.join(" / ");
+}
+
+function revealWinnerDetail() {
+  if (!(refs.winnerDetail instanceof HTMLElement)) {
+    return;
+  }
+
+  window.requestAnimationFrame(() => {
+    const prefersReducedMotion =
+      typeof window.matchMedia === "function" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    refs.winnerDetail.scrollIntoView({
+      behavior: prefersReducedMotion ? "auto" : "smooth",
+      block: "start",
+    });
+    refs.winnerDetail.classList.remove("detail-panel-focus");
+    void refs.winnerDetail.offsetWidth;
+    refs.winnerDetail.classList.add("detail-panel-focus");
+    window.clearTimeout(state.detailRevealTimer);
+    state.detailRevealTimer = window.setTimeout(() => {
+      refs.winnerDetail.classList.remove("detail-panel-focus");
+      state.detailRevealTimer = null;
+    }, 1400);
+  });
+}
+
+function formatWordListDisplay(words, emptyLabel = "なし") {
+  if (!Array.isArray(words)) {
+    return emptyLabel;
+  }
+
+  const values = words
+    .map((word) => String(word || "").trim())
+    .filter(Boolean);
+
+  return values.length > 0 ? values.join(" / ") : emptyLabel;
 }
 
 function formatSigned(value) {

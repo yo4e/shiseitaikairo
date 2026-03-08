@@ -150,11 +150,16 @@ function evaluateRepetition(stats, reasons) {
 }
 
 function findToxicHits(poem, toxicWords) {
-  const lowered = poem.toLowerCase();
+  const tokenKeys = new Set(
+    poem
+      .split(/\s+/)
+      .map((token) => token.trim().toLowerCase())
+      .filter(Boolean),
+  );
   return toxicWords
     .map((word) => word.trim())
     .filter(Boolean)
-    .filter((word) => lowered.includes(word.toLowerCase()));
+    .filter((word) => tokenKeys.has(word.toLowerCase()));
 }
 
 function clamp(value, min, max) {

@@ -59,6 +59,22 @@ const BIOME_ALLOW = new Set([
   "ritual",
 ]);
 const SEASON_ALLOW = new Set(["spring", "summer", "autumn", "winter"]);
+const SCORE_BREAKDOWN_KEYS = [
+  "metabolismScore",
+  "structureScore",
+  "toxinPenalty",
+  "repetitionPenalty",
+] as const;
+const GENOME_KEYS = [
+  "lines",
+  "lineLen",
+  "assertiveness",
+  "afterglow",
+  "concreteness",
+  "repetition",
+  "nutrientMix",
+  "immunity",
+] as const;
 
 const CORS_HEADERS: Record<string, string> = {
   "Access-Control-Allow-Origin": "*",
@@ -93,6 +109,10 @@ export default {
 
       if (request.method === "GET" && url.pathname === "/api/specimens") {
         return await handleListSpecimens(url, env);
+      }
+
+      if (request.method === "GET" && url.pathname === "/api/specimens/stats") {
+        return await handleSpecimenStats(env);
       }
 
       if (request.method === "POST" && url.pathname === "/api/specimens") {
@@ -243,6 +263,48 @@ async function handleGetSpecimen(specimenId: string, env: Env): Promise<Response
   });
 }
 
+async function handleSpecimenStats(env: Env): Promise<Response> {
+  const [totalRow, biomeRows, seasonRows] = await Promise.all([
+    env.DB.prepare(
+      "SELECT COUNT(*) as total_count FROM specimens WHERE is_hidden = 0",
+    ).first<{ total_count: number }>(),
+    env.DB.prepare(
+      `
+        SELECT biome, COUNT(*) as item_count
+        FROM specimens
+        WHERE is_hidden = 0
+        GROUP BY biome
+      `,
+    ).all<{ biome: string; item_count: number }>(),
+    env.DB.prepare(
+      `
+        SELECT season, COUNT(*) as item_count
+        FROM specimens
+        WHERE is_hidden = 0
+        GROUP BY season
+      `,
+    ).all<{ season: string; item_count: number }>(),
+  ]);
+
+  const biomeCounts = Object.fromEntries(
+    (biomeRows.results || [])
+      .filter((row) => BIOME_ALLOW.has(row.biome))
+      .map((row) => [row.biome, Number(row.item_count || 0)]),
+  );
+  const seasonCounts = Object.fromEntries(
+    (seasonRows.results || [])
+      .filter((row) => SEASON_ALLOW.has(row.season))
+      .map((row) => [row.season, Number(row.item_count || 0)]),
+  );
+
+  return json({
+    ok: true,
+    total_count: Number(totalRow?.total_count || 0),
+    biome_counts: biomeCounts,
+    season_counts: seasonCounts,
+  });
+}
+
 async function handleCreateSpecimen(request: Request, env: Env): Promise<Response> {
   const body = await parseJsonBody(request);
   if (!isJsonObject(body)) {
@@ -265,16 +327,18 @@ async function handleCreateSpecimen(request: Request, env: Env): Promise<Respons
     return json({ ok: false, error: "invalid_season" }, 400);
   }
 
-  const collectorId = asTrimmedString(payload.collector_id) || "C-ANON";
-  const scoreTotal = asNumber(payload.score_total, 0);
-  const scoreBreakdown = asPlainObject(payload.score_breakdown);
-  const genome = asPlainObject(payload.genome);
-  const parentIds = asStringArray(payload.parent_ids, 20);
-  const runHash = asTrimmedString(payload.run_hash) || null;
+  const collectorId = sanitizeCollectorId(payload.collector_id);
+  const scoreTotal = clampNumber(asNumber(payload.score_total, 0), 0, 100, 0);
+  const scoreBreakdown = sanitizeScoreBreakdown(payload.score_breakdown);
+  const genome = sanitizeGenome(payload.genome);
+  const parentIds = sanitizeParentIds(payload.parent_ids);
+  const runHash = sanitizeRunHash(payload.run_hash);
 
   const poemPreview = buildPoemPreview(poemText, 3, 220);
   const createdAt = new Date().toISOString();
-  const submitFingerprint = await createFingerprint(request, "submit");
+  const submitFingerprint = await createFingerprint(request, "submit", {
+    rotateDaily: true,
+  });
   const limitResult = await enforceSubmitRateLimit({
     env,
     fingerprint: submitFingerprint,
@@ -358,6 +422,7 @@ async function handleCreateSpecimen(request: Request, env: Env): Promise<Respons
   await trimSpecimensIfNeeded({
     env,
     nowIso: createdAt,
+    protectedSpecimenIds: [specimenId],
   });
 
   return json(
@@ -385,7 +450,9 @@ async function handleLikeSpecimen(
     return json({ ok: false, error: "not_found" }, 404);
   }
 
-  const fingerprint = await createFingerprint(request, "like");
+  const fingerprint = await createFingerprint(request, "like", {
+    rotateDaily: false,
+  });
   const createdAt = new Date().toISOString();
 
   const result = await env.DB.prepare(
@@ -439,7 +506,9 @@ async function handleReportSpecimen(
   const body = await parseJsonBody(request);
   const reason = asTrimmedString(isJsonObject(body) ? body.reason : "") || null;
 
-  const fingerprint = await createFingerprint(request, "report");
+  const fingerprint = await createFingerprint(request, "report", {
+    rotateDaily: false,
+  });
   const createdAt = new Date().toISOString();
 
   const result = await env.DB.prepare(
@@ -581,9 +650,11 @@ async function pruneSubmitEvents({
 async function trimSpecimensIfNeeded({
   env,
   nowIso,
+  protectedSpecimenIds = [],
 }: {
   env: Env;
   nowIso: string;
+  protectedSpecimenIds?: string[];
 }): Promise<number> {
   const maxCount = parsePositiveInt(env.SPECIMEN_MAX_COUNT || "5000", 5000, 200000);
   if (maxCount < 1) {
@@ -619,6 +690,7 @@ async function trimSpecimensIfNeeded({
     env,
     limit: targetDeleteCount,
     cutoffIso,
+    protectedSpecimenIds,
   });
   if (candidateIds.length === 0) {
     return 0;
@@ -636,16 +708,18 @@ async function collectTrimCandidates({
   env,
   limit,
   cutoffIso,
+  protectedSpecimenIds,
 }: {
   env: Env;
   limit: number;
   cutoffIso: string;
+  protectedSpecimenIds: string[];
 }): Promise<string[]> {
   const firstPass = await queryTrimCandidates({
     env,
     limit,
     cutoffIso,
-    excludeIds: [],
+    excludeIds: protectedSpecimenIds,
     enforceAgeCutoff: true,
   });
 
@@ -657,7 +731,7 @@ async function collectTrimCandidates({
     env,
     limit: limit - firstPass.length,
     cutoffIso,
-    excludeIds: firstPass,
+    excludeIds: [...protectedSpecimenIds, ...firstPass],
     enforceAgeCutoff: false,
   });
 
@@ -755,9 +829,9 @@ function serializeSpecimen(row: SpecimenRecord) {
     biome: row.biome,
     season: row.season,
     score_total: row.score_total,
-    score_breakdown: safeJsonParse(row.score_breakdown_json, {}),
-    genome: safeJsonParse(row.genome_json, {}),
-    parent_ids: safeJsonParse(row.parent_ids_json, []),
+    score_breakdown: sanitizeScoreBreakdown(safeJsonParse(row.score_breakdown_json, {})),
+    genome: sanitizeGenome(safeJsonParse(row.genome_json, {})),
+    parent_ids: sanitizeParentIds(safeJsonParse(row.parent_ids_json, [])),
     run_hash: row.run_hash,
     likes: row.likes,
     reports: row.reports,
@@ -821,6 +895,58 @@ function asPlainObject(value: unknown): Json {
   return value as Json;
 }
 
+function sanitizeCollectorId(value: unknown): string {
+  const trimmed = asTrimmedString(value);
+  if (!trimmed) {
+    return "C-ANON";
+  }
+  return trimmed.slice(0, 32);
+}
+
+function sanitizeRunHash(value: unknown): string | null {
+  const trimmed = asTrimmedString(value);
+  if (!trimmed) {
+    return null;
+  }
+  return trimmed.slice(0, 120);
+}
+
+function sanitizeParentIds(value: unknown): string[] {
+  return asStringArray(value, 20).map((item) => item.slice(0, 40));
+}
+
+function sanitizeScoreBreakdown(value: unknown): Json {
+  const source = asPlainObject(value);
+  const output: Json = {};
+  for (const key of SCORE_BREAKDOWN_KEYS) {
+    if (key in source) {
+      output[key] = clampNumber(asNumber(source[key], 0), 0, 1000, 0);
+    }
+  }
+  return output;
+}
+
+function sanitizeGenome(value: unknown): Json {
+  const source = asPlainObject(value);
+  const output: Json = {};
+  for (const key of GENOME_KEYS) {
+    if (!(key in source)) {
+      continue;
+    }
+    const rawValue = asNumber(source[key], 0);
+    if (key === "lines") {
+      output[key] = clampNumber(rawValue, 1, 24, 1);
+      continue;
+    }
+    if (key === "lineLen") {
+      output[key] = clampNumber(rawValue, 3, 40, 8);
+      continue;
+    }
+    output[key] = clampNumber(rawValue, 0, 1, 0);
+  }
+  return output;
+}
+
 function asStringArray(value: unknown, max: number): string[] {
   if (!Array.isArray(value)) {
     return [];
@@ -865,12 +991,28 @@ function randomBase32(length: number): string {
     .join("");
 }
 
-async function createFingerprint(request: Request, scope: string): Promise<string> {
+async function createFingerprint(
+  request: Request,
+  scope: string,
+  options: {
+    rotateDaily: boolean;
+  },
+): Promise<string> {
   const ip = request.headers.get("CF-Connecting-IP") || "0.0.0.0";
   const ua = request.headers.get("User-Agent") || "";
-  const date = new Date().toISOString().slice(0, 10);
-  const payload = `${scope}|${ip}|${ua}|${date}`;
+  const date = options.rotateDaily ? `|${new Date().toISOString().slice(0, 10)}` : "";
+  const payload = `${scope}|${ip}|${ua}${date}`;
   return sha256Hex(payload);
+}
+
+function clampNumber(value: number, min: number, max: number, fallback: number): number {
+  if (!Number.isFinite(value)) {
+    return fallback;
+  }
+  if (max < min) {
+    return min;
+  }
+  return Math.min(max, Math.max(min, value));
 }
 
 async function sha256Hex(input: string): Promise<string> {
