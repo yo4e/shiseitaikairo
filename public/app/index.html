@@ -4,6 +4,12 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>詩生態回路 | 詩の人工生命シミュレータ</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Serif+JP:wght@300;500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
@@ -23,10 +29,20 @@
       <div class="site-shell">
         <div class="app-shell">
       <header class="page-header">
-        <h1>詩生態回路</h1>
-        <p class="tagline">
-          言葉を資源に、詩の個体群が淘汰と変異をくり返す人工生命シミュレータ
-        </p>
+        <div class="page-header-copy">
+          <p class="page-kicker">Poetic Ecosystem Simulator</p>
+          <h1>詩生態回路</h1>
+          <p class="tagline">
+            言葉を資源に、詩の個体群が淘汰と変異をくり返す人工生命シミュレータ
+          </p>
+        </div>
+        <div class="page-header-status" aria-label="システム状態">
+          <span class="status-chip status-chip-live">
+            <span class="status-chip-dot" aria-hidden="true"></span>
+            SYSTEM_ACTIVE
+          </span>
+          <span class="status-chip">SEASONAL_V1</span>
+        </div>
       </header>
 
       <section class="panel guide-panel" aria-labelledby="guide-title">

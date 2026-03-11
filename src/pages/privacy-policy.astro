@@ -5,54 +5,107 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 <BaseLayout
   title="プライバシーポリシー"
   description="詩生態回路におけるデータの取り扱い方針（v0.2）です。"
+  theme="app"
 >
-  <article class="policy">
-    <h1>プライバシーポリシー（v0.2）</h1>
-    <p>制定日: 2026年2月15日</p>
-    <p>改定日: 2026年3月8日</p>
+  <div class="doc-stack">
+    <section class="doc-page-header">
+      <div class="doc-page-copy">
+        <p class="page-kicker">Privacy Policy</p>
+        <h1>プライバシーポリシー</h1>
+        <p class="tagline">
+          詩生態回路では、通常の観察データは利用者のブラウザ内に保存されます。外部送信が発生するのは、公共標本箱への投稿や反応など、利用者が明示的に行った操作のときだけです。
+        </p>
+      </div>
+      <div class="page-header-status" aria-label="ポリシー状態">
+        <span class="status-chip status-chip-live">
+          <span class="status-chip-dot" aria-hidden="true"></span>
+          POLICY_ACTIVE
+        </span>
+        <span class="status-chip">PUBLIC_SPECIMENS</span>
+      </div>
+    </section>
 
-    <h2>1. 収集する情報</h2>
-    <p>
-      現行のシミュレータ（/app）は、入力した栄養語・毒語・設定値・実行結果をブラウザ内の
-      IndexedDB に保存します。加えて、公共標本箱へ投稿した場合は、詩本文、スコア、遺伝子サマリ、親ID、
-      バイオーム、季節、実行ハッシュ、採取者IDを公開用データとして収集します。
-    </p>
+    <section class="doc-meta-grid" aria-label="ポリシー概要">
+      <article class="doc-panel doc-meta-card">
+        <p class="section-label">Version</p>
+        <h2>v0.2</h2>
+        <p>制定日: 2026年2月15日</p>
+        <p>改定日: 2026年3月8日</p>
+      </article>
 
-    <h2>2. 保存場所</h2>
-    <p>
-      実行履歴や設定値は利用者の端末ブラウザ内に保持されます。公共標本箱への投稿時に使う採取者ID
-      （`collector_id`）も、同じブラウザからの投稿をゆるやかに区別するために `localStorage`
-      へランダム生成して保持します。公共標本箱に明示的に投稿された標本と、その標本に対するいいね・
-      通報の記録は、公開用データベースに保存されます。ブラウザ設定・履歴削除・ストレージ削除によって、
-      端末内の保存データは消去される場合があります。
-    </p>
+      <article class="doc-panel doc-meta-card">
+        <p class="section-label">Local First</p>
+        <h2>通常の実行履歴は端末内に保存されます</h2>
+        <p>
+          入力した資源語、毒語、設定値、実行結果はブラウザ内ストレージに保持されます。明示的な投稿をしない限り、観察データは公開されません。
+        </p>
+      </article>
 
-    <h2>3. 外部送信</h2>
-    <p>
-      サーバー送信が発生するのは、利用者が「公共標本箱へ投稿」「いいね」「通報」などの明示的な操作を行った場合のみです。
-      これらの操作では、乱用防止のために IP アドレスと User-Agent から生成したハッシュ値を利用します。
-      生の IP アドレスや User-Agent 文字列そのものは保存しません。
-    </p>
+      <article class="doc-panel doc-meta-card">
+        <p class="section-label">External Send</p>
+        <h2>送信は投稿や反応のときだけです</h2>
+        <p>
+          公共標本箱への投稿、いいね、通報などの操作時だけサーバー送信が発生します。乱用防止にはハッシュ化した識別情報を利用します。
+        </p>
+      </article>
+    </section>
 
-    <h2>4. 公共標本箱について</h2>
-    <p>
-      公共標本箱に投稿された標本は、共有URLから閲覧できる公開データになります。通報が一定数に達した標本は非表示化されることがあり、
-      投稿総数が運用上の上限を超えた場合は、いいねが少ない古い標本から順に自動整理される場合があります。
-    </p>
+    <section class="doc-card-grid" aria-label="ポリシー本文">
+      <article class="doc-panel doc-card">
+        <p class="section-label">1. Data Collected</p>
+        <h2>収集する情報</h2>
+        <p>
+          シミュレータでは、入力した栄養語・毒語・設定値・実行結果をブラウザ内の IndexedDB に保存します。公共標本箱へ投稿した場合は、詩本文、スコア、遺伝子サマリ、親ID、バイオーム、季節、実行ハッシュ、採取者IDを公開用データとして扱います。
+        </p>
+      </article>
 
-    <h2>5. 免責</h2>
-    <p>
-      本プロジェクトは実験的な表現システムです。生成結果の正確性・完全性・第三者権利非侵害を保証しません。
-    </p>
+      <article class="doc-panel doc-card">
+        <p class="section-label">2. Storage</p>
+        <h2>保存場所</h2>
+        <p>
+          実行履歴や設定値は利用者のブラウザ内に保持されます。投稿時に使う採取者ID `collector_id` も、同一ブラウザからの投稿をゆるやかに区別するために `localStorage` へランダム生成して保存します。
+        </p>
+      </article>
 
-    <h2>6. 改定</h2>
-    <p>
-      本ポリシーは必要に応じて改定されます。重要な変更はサイト上で告知します。
-    </p>
+      <article class="doc-panel doc-card">
+        <p class="section-label">3. External Send</p>
+        <h2>外部送信</h2>
+        <p>
+          サーバー送信が起きるのは、利用者が「公共標本箱へ投稿」「いいね」「通報」などの明示的な操作を行った場合のみです。乱用防止のため、IP アドレスと User-Agent から生成したハッシュ値を利用しますが、生の値は保存しません。
+        </p>
+      </article>
 
-    <h2>7. お問い合わせ</h2>
-    <p>
-      問い合わせ窓口は整備中です。暫定的にリポジトリの Issue をご利用ください。
-    </p>
-  </article>
+      <article class="doc-panel doc-card">
+        <p class="section-label">4. Public Cabinet</p>
+        <h2>公共標本箱について</h2>
+        <p>
+          公共標本箱に投稿された標本は、共有 URL から閲覧できる公開データになります。通報が一定数に達した標本は非表示化されることがあり、運用上の上限を超えた場合は古い標本が自動整理される場合があります。
+        </p>
+      </article>
+
+      <article class="doc-panel doc-card">
+        <p class="section-label">5. Disclaimer</p>
+        <h2>免責</h2>
+        <p>
+          本プロジェクトは実験的な表現システムです。生成結果の正確性、完全性、第三者権利の非侵害を保証しません。公開投稿を行う際は、投稿内容に責任を持ってください。
+        </p>
+      </article>
+
+      <article class="doc-panel doc-card">
+        <p class="section-label">6. Updates</p>
+        <h2>改定</h2>
+        <p>
+          本ポリシーは必要に応じて改定されます。重要な変更がある場合は、サイト上での告知または文面更新によって反映します。
+        </p>
+      </article>
+
+      <article class="doc-panel doc-card">
+        <p class="section-label">7. Contact</p>
+        <h2>お問い合わせ</h2>
+        <p>
+          問い合わせ窓口は整備中です。暫定的に、リポジトリの Issue をご利用ください。運用体制が変わった場合は、このページに反映します。
+        </p>
+      </article>
+    </section>
+  </div>
 </BaseLayout>

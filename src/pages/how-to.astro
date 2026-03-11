@@ -5,49 +5,110 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 <BaseLayout
   title="使い方"
   description="詩生態回路の基本的な使い方。入力項目、実行、観察、履歴確認までの流れを説明します。"
+  theme="app"
 >
-  <article class="policy">
-    <h1>使い方</h1>
-    <p>
-      ここでは、詩生態回路の基本操作と観察ポイントを短くまとめています。
-    </p>
+  <div class="doc-stack">
+    <section class="doc-page-header">
+      <div class="doc-page-copy">
+        <p class="page-kicker">Poetic Ecosystem Guide</p>
+        <h1>使い方</h1>
+        <p class="tagline">
+          詩生態回路は、一篇を直接書く場所ではなく、言葉の個体群がどう生まれ、残り、枝分かれするかを観察するためのシミュレータです。
+        </p>
+      </div>
+      <div class="page-header-status" aria-label="ガイドの状態">
+        <span class="status-chip status-chip-live">
+          <span class="status-chip-dot" aria-hidden="true"></span>
+          GUIDE_READY
+        </span>
+        <span class="status-chip">SIMULATOR_FLOW</span>
+      </div>
+    </section>
 
-    <h2>1. 栄養語を入力する</h2>
-    <p>
-      左カラム上部の「栄養語プリセット」「栄養語（カンマ区切り）」「毒語（任意）」を設定します。
-      栄養語は改行入力にも対応しています。
-    </p>
+    <section class="doc-panel doc-summary-panel" aria-labelledby="guide-overview-title">
+      <div>
+        <p class="section-label">Quick Start</p>
+        <h2 id="guide-overview-title">最初は、3つだけ見れば十分です。</h2>
+        <p>
+          プリセットで世界を選び、生態系を数世代ぶん回し、残った個体の差を読む。この3段だけでも、かなり人工生命らしい挙動が見えてきます。
+        </p>
+      </div>
+      <ol class="doc-compact-list">
+        <li>世界の雰囲気を選んで、資源語と毒語を読み込む</li>
+        <li>生存数、死因、勝者の推移を見ながら数世代ぶん観察する</li>
+        <li>気に入った個体を標本として残し、公共標本箱で見返す</li>
+      </ol>
+    </section>
 
-    <h2>2. 実行する</h2>
-    <p>
-      「実行」ボタンで世代進化を開始します。個体は詩を生成し、診断スコアで評価されます。
-    </p>
+    <section class="doc-card-grid" aria-label="使い方の詳細">
+      <article class="doc-panel doc-card">
+        <p class="section-label">Step 1</p>
+        <h2>世界を決める</h2>
+        <p>
+          左カラム上部のプリセットから、庭園・身体・港湾などの世界観を選びます。プリセットを使うと、その雰囲気に合った資源語が最初から入ります。
+        </p>
+      </article>
 
-    <h2>3. 現在世代を読む</h2>
-    <p>
-      右カラムの「現在世代」で勝者詩を確認できます。詳細ボタンで遺伝子、診断、親子差分、エネルギー推移を閲覧できます。
-    </p>
+      <article class="doc-panel doc-card">
+        <p class="section-label">Step 2</p>
+        <h2>資源語と毒語を調整する</h2>
+        <p>
+          「栄養語（資源）」には生存を助ける語を、「毒語（汚染）」には診断や死亡要因に関わる語を入れます。資源語はカンマ区切りでも改行でも入力できます。
+        </p>
+      </article>
 
-    <h2>4. 種分化を観察する</h2>
-    <p>
-      「種分化ビュー」では断定-余韻と具体度の分布を可視化します。世代ごとの偏りや系統の枝分かれを追跡できます。
-    </p>
+      <article class="doc-panel doc-card">
+        <p class="section-label">Step 3</p>
+        <h2>個体数と世代数を決める</h2>
+        <p>
+          最初は個体数 20〜30、世代数 3〜5 くらいがおすすめです。多くしすぎると読み切れなくなるので、まずは小さめの生態系から始めると追いやすいです。
+        </p>
+      </article>
 
-    <h2>5. 履歴を使う</h2>
-    <p>
-      実行履歴はブラウザ内（IndexedDB）へ保存されます。同じシードと設定で再実行すると、同じ系譜を再観測できます。
-    </p>
+      <article class="doc-panel doc-card">
+        <p class="section-label">Step 4</p>
+        <h2>生態系を回す</h2>
+        <p>
+          「生態系を回す」を押すと、各個体が詩を生成し、環境との相性や構造スコア、毒語の影響を受けながら淘汰されます。結果は世代ごとに保存されます。
+        </p>
+      </article>
 
-    <h2>6. 公共標本箱へ投稿する</h2>
-    <p>
-      勝者カードや個体詳細から、気に入った個体を公共標本箱へ明示的に投稿できます。投稿すると、詩本文、スコア、
-      遺伝子サマリ、親ID、季節・バイオーム情報が公開標本として保存され、共有URLで閲覧できます。
-    </p>
+      <article class="doc-panel doc-card">
+        <p class="section-label">Step 5</p>
+        <h2>現在世代の勝者を読む</h2>
+        <p>
+          右カラムの勝者一覧から、各世代で残った個体を読めます。詳細を開くと、遺伝子、スコア内訳、診断、親子差分まで追跡できます。
+        </p>
+      </article>
 
-    <h2>7. ローカル保存と公開投稿の違い</h2>
-    <p>
-      通常の実行履歴はブラウザ内にだけ保存されます。サーバーへ送信されるのは、「公共標本箱へ投稿」「いいね」「通報」など、
-      利用者が明示的に行った操作のときだけです。
-    </p>
-  </article>
+      <article class="doc-panel doc-card">
+        <p class="section-label">Step 6</p>
+        <h2>生態系マップと履歴を見る</h2>
+        <p>
+          左下のマップでは、文体の分布や偏りを眺められます。履歴にはシードと設定が残るので、同じ条件で再観測して比較できます。
+        </p>
+      </article>
+
+      <article class="doc-panel doc-card">
+        <p class="section-label">Step 7</p>
+        <h2>公共標本箱へ投稿する</h2>
+        <p>
+          気に入った個体は、勝者カードや個体詳細から明示的に投稿できます。投稿した標本は共有 URL を持つ公開データとなり、あとから見返せます。
+        </p>
+      </article>
+
+      <article class="doc-panel doc-card">
+        <p class="section-label">Note</p>
+        <h2>ローカル保存と公開投稿は別です</h2>
+        <p>
+          通常の実行履歴はブラウザ内にだけ保存されます。サーバー送信が発生するのは、投稿、いいね、通報など、利用者が明示的に操作したときだけです。
+        </p>
+      </article>
+    </section>
+
+    <section class="doc-link-row" aria-label="関連導線">
+      <a class="button primary" href="/app/index.html">シミュレータを開く</a>
+      <a class="button secondary" href="/cabinet">公共標本箱を見る</a>
+    </section>
+  </div>
 </BaseLayout>

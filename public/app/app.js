@@ -1154,8 +1154,31 @@ function renderWinnerDetail(record, generation, run) {
   const publishClass = posted ? "tiny-button success" : "tiny-button";
   const toxicConfiguredText = formatWordListDisplay(record.toxicWords, "なし");
   const toxicHitText = formatWordListDisplay(record.diag?.toxicHits, "なし");
+  const structureScore = formatValue(record.scoreBreakdown?.structureScore ?? 0);
+  const metabolismScore = formatValue(record.scoreBreakdown?.metabolismScore ?? 0);
 
   refs.winnerDetail.innerHTML = `
+    <div class="winner-hero-block">
+      <div class="winner-hero-head">
+        <span class="winner-flag">ACTIVE WINNER</span>
+        <span class="winner-identifier">第${generation}世代 / ${escapeHtml(record.individualId)}</span>
+      </div>
+      <pre class="winner-poem">${escapeHtml(record.poem)}</pre>
+      <div class="winner-hero-stats">
+        <div class="winner-hero-stat">
+          <span>生存適応度</span>
+          <strong>${record.score.toFixed(2)}</strong>
+        </div>
+        <div class="winner-hero-stat">
+          <span>代謝スコア</span>
+          <strong>${escapeHtml(metabolismScore)}</strong>
+        </div>
+        <div class="winner-hero-stat">
+          <span>構造スコア</span>
+          <strong>${escapeHtml(structureScore)}</strong>
+        </div>
+      </div>
+    </div>
     <h3>個体詳細: ${escapeHtml(record.individualId)}</h3>
     <p class="item-meta">世代: ${generation}, スコア: ${record.score.toFixed(2)}, 状態: ${escapeHtml(getLifeStateLabel(record))}</p>
     <p class="item-meta">年齢: ${record.age ?? 0}, エネルギー: ${formatEnergy(record.energy?.before)} → ${formatSigned(record.energy?.delta ?? 0)} → ${formatEnergy(record.energy?.after)}</p>

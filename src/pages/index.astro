@@ -6,81 +6,142 @@ import BaseLayout from "../layouts/BaseLayout.astro";
   title="トップ"
   description="詩生態回路の公式サイト。詩を個体として進化させる人工生命シミュレータ、使い方、ポリシーをまとめています。"
 >
-  <section class="hero">
-    <p class="eyebrow">詩の人工生命シミュレータ</p>
-    <h1>言葉を資源に、詩を進化させる</h1>
-    <p>
-      詩生態回路では、詩は個体として生まれます。環境に適応した個体が生き残り、交叉と突然変異で系統が分かれていきます。<br />
-      あなたは一篇を直接書くのではなく、生態系の初期条件を与えて、世代ごとの変化を観察します。
-    </p>
-    <div class="chip-list" aria-label="人工生命の要素">
-      <span class="chip">個体</span>
-      <span class="chip">環境</span>
-      <span class="chip">淘汰</span>
-      <span class="chip">交叉と突然変異</span>
-      <span class="chip">標本保存</span>
-    </div>
-    <div class="hero-actions">
-      <a class="button primary" href="/app/index.html">ガイドつきで始める</a>
-      <a class="button secondary" href="/cabinet">公共標本箱を見る</a>
-      <a class="button secondary" href="/how-to">仕組みを見る</a>
+  <section class="hero home-hero">
+    <div class="home-hero-inner">
+      <p class="eyebrow">Artificial Life Simulator</p>
+      <h1>言葉を資源に、<br />詩を進化させる</h1>
+      <p class="home-hero-copy">
+        「詩生態回路」は、一篇を直接つくるための道具ではなく、詩が個体として生まれ、環境に適応し、
+        交叉と突然変異をくり返しながら世代をまたいで変化していく様子を観察する場です。
+      </p>
+      <div class="hero-actions">
+        <a class="button primary" href="/app/index.html">ガイドつきで始める</a>
+        <a class="button secondary" href="/how-to">仕組みを見る</a>
+      </div>
+      <div class="home-hero-meta" aria-label="観察できる要素">
+        <span>個体の発生</span>
+        <span>淘汰と交叉</span>
+        <span>標本保存</span>
+      </div>
     </div>
   </section>
 
-  <section class="page-grid" aria-label="コンテンツ案内">
-    <article class="card">
-      <h2>これは何か</h2>
+  <section class="home-intro" aria-labelledby="home-intro-title">
+    <div class="home-intro-visual" aria-hidden="true">
+      <div class="home-intro-rings">
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+      <p class="home-intro-caption">"Words enter the circuit."</p>
+    </div>
+
+    <div class="home-intro-copy">
+      <p class="section-label">About</p>
+      <h2 id="home-intro-title">これは、<br />言語の生命体です。</h2>
       <p>
-        ただの詩ジェネレーターではなく、詩を「個体」として扱う観察装置です。個体ごとに遺伝子、健康診断、
-        親子関係があり、環境の偏りや汚染に適応した系統が次世代へ残ります。
+        ここでは、単語は栄養であり、汚染であり、時には遺伝子の癖になります。入力した語群から個体が発生し、
+        季節や資源の偏りの中で生き残った系統だけが次世代へ進みます。
       </p>
-    </article>
+      <p>
+        美しい語がそのまま残るとは限りません。環境との相性、反復の癖、毒語への耐性、親から受け継いだ傾向が絡み合って、
+        この世界ならではの詩の進化が立ち上がります。
+      </p>
+    </div>
+  </section>
 
-    <article class="card">
-      <h2>最初の遊び方</h2>
-      <ol class="step-list">
-        <li>世界の雰囲気に近いプリセットを選んで、資源語と汚染語を読み込む</li>
-        <li>数世代ぶん生態系を回して、生存数と勝者の変化を見る</li>
-        <li>気に入った個体を標本として残し、公共標本箱で見返す</li>
-      </ol>
-    </article>
+  <section class="home-process" aria-labelledby="home-process-title">
+    <div class="home-section-head">
+      <p class="section-label">Process</p>
+      <h2 id="home-process-title">回路の循環</h2>
+      <p>
+        最初はプリセットと資源語だけで十分です。観察したいのは完成品の一篇ではなく、世代ごとにどう振る舞いが変わるかです。
+      </p>
+    </div>
 
-    <article class="card">
-      <h2>観察できる人工生命のふるまい</h2>
-      <ul>
-        <li>季節環境と汚染語によって変わる生存傾向</li>
-        <li>淘汰の結果として残る文体の系統差</li>
-        <li>親IDと突然変異による世代のつながり</li>
+    <div class="home-process-grid">
+      <article class="process-card">
+        <span class="process-number">1</span>
+        <h3>世界を選ぶ</h3>
+        <p>庭園や身体などのプリセットから雰囲気を決め、資源語と汚染語を読み込みます。</p>
+      </article>
+
+      <article class="process-card">
+        <span class="process-number">2</span>
+        <h3>数世代ぶん観察する</h3>
+        <p>生存数、死因、勝者の変化を見ながら、どの文体が環境へ適応するかを追います。</p>
+      </article>
+
+      <article class="process-card">
+        <span class="process-number">3</span>
+        <h3>標本として残す</h3>
+        <p>気に入った個体を公共標本箱へ保存し、あとから系譜や人気の傾向を見返せます。</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="home-behavior" aria-labelledby="home-behavior-title">
+    <div class="home-behavior-copy">
+      <p class="section-label section-label-light">Ecosystem</p>
+      <h2 id="home-behavior-title">自律する言葉の連鎖</h2>
+      <ul class="home-feature-list">
+        <li>
+          <h3>季節と汚染が生存を偏らせる</h3>
+          <p>同じ語でも、環境が変わると有利不利が反転し、残る系統が入れ替わります。</p>
+        </li>
+        <li>
+          <h3>淘汰の結果として文体が分かれる</h3>
+          <p>反復、断定、余韻、具体度のバランスによって、世代ごとに別の文体圏が育ちます。</p>
+        </li>
+        <li>
+          <h3>親IDと変異で由来が追える</h3>
+          <p>気に入った個体がどこから来たのかを、親子差分と履歴からあとで辿れます。</p>
+        </li>
       </ul>
+    </div>
+
+    <div class="home-behavior-panel" aria-label="観察できる要素">
+      <div class="behavior-metric">
+        <span>環境循環</span>
+        <strong>春 → 夏 → 秋 → 冬</strong>
+      </div>
+      <div class="behavior-metric">
+        <span>淘汰の軸</span>
+        <strong>資源適応 / 毒語回避 / 構造安定</strong>
+      </div>
+      <div class="behavior-metric">
+        <span>観察対象</span>
+        <strong>勝者 / 死因 / 系譜 / 分布</strong>
+      </div>
+    </div>
+  </section>
+
+  <section class="home-links" aria-label="コンテンツ案内">
+    <article class="card home-link-card">
+      <p class="section-label">Simulator</p>
+      <h3>まずはシミュレータを回す</h3>
+      <p>世代ごとの勝者、死亡個体、生存数、生態系マップを見ながら世界のふるまいを観察します。</p>
+      <a class="button secondary" href="/app/index.html">シミュレータへ</a>
     </article>
 
-    <article class="card">
-      <h3>公共標本箱</h3>
-      <p>
-        育った個体を公開標本として残せます。先に標本を眺めると、この世界でどんな個体が生き残るのか掴みやすくなります。
-      </p>
+    <article class="card home-link-card">
+      <p class="section-label">Cabinet</p>
+      <h3>公共標本箱で残り方を見る</h3>
+      <p>育った個体を公開標本として残せます。先に標本を見ると、この世界の傾向もつかみやすくなります。</p>
       <a class="button secondary" href="/cabinet">公共標本箱へ</a>
     </article>
 
-    <article class="card">
-      <h3>使い方と見どころ</h3>
-      <p>
-        パラメータの意味だけでなく、「どこを見ると人工生命らしさが見えるか」をまとめています。
-      </p>
+    <article class="card home-link-card">
+      <p class="section-label">Guide</p>
+      <h3>見どころと読み方を知る</h3>
+      <p>パラメータの意味だけでなく、どこに人工生命らしさが現れるかをまとまった形で読めます。</p>
       <a class="button secondary" href="/how-to">How To ページへ</a>
-    </article>
-
-    <article class="card">
-      <h3>シミュレータでできること</h3>
-      <ul>
-        <li>世代ごとの勝者、死亡個体、生存数の観察</li>
-        <li>生態系マップで見る文体の分布</li>
-        <li>履歴保存とシード再観測</li>
-      </ul>
     </article>
   </section>
 
-  <p class="notice">
+  <p class="notice home-notice">
     おすすめは、<a href="/app/index.html">/app/index.html</a> で一度生態系を回してから、
     <a href="/cabinet">公共標本箱</a> でどんな個体が残ったかを見比べる流れです。
   </p>
